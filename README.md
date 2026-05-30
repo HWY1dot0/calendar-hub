@@ -2,7 +2,7 @@
 
 Multi Note Calendar is a beta fork of [Liam Cain's Calendar plugin](https://github.com/liamcain/obsidian-calendar-plugin) for [Obsidian](https://obsidian.md/). It is built for workflows where one calendar date can map to multiple notes across different folders.
 
-The original Calendar plugin is MIT licensed, and the original copyright notice remains in [LICENSE](./LICENSE).
+The original Calendar plugin is MIT licensed. The original copyright notice remains in [LICENSE](./LICENSE), alongside copyright for this fork's modifications.
 
 ![screenshot-full](https://raw.githubusercontent.com/liamcain/obsidian-calendar-plugin/master/images/screenshot-full.png)
 
