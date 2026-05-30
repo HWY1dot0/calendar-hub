@@ -91,3 +91,9 @@ Multi Note Calendar uses its own plugin id, `multi-note-calendar`, so it can be 
 npm test
 npm run build
 ```
+
+## Say Thanks
+
+If Multi Note Calendar helps your workflow, you can buy me a coffee:
+
+https://www.buymeacoffee.com/hwy1dot0
