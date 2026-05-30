@@ -1,6 +1,6 @@
 # Multi Note Calendar
 
-Multi Note Calendar is a beta fork of [Liam Cain's Calendar plugin](https://github.com/liamcain/obsidian-calendar-plugin) for [Obsidian](https://obsidian.md/). It is built for workflows where one calendar date can map to multiple notes across different folders.
+Multi Note Calendar is a fork of [Liam Cain's Calendar plugin](https://github.com/liamcain/obsidian-calendar-plugin) for [Obsidian](https://obsidian.md/). It is built for workflows where one calendar date can map to multiple notes across different folders.
 
 The original Calendar plugin is MIT licensed. The original copyright notice remains in [LICENSE](./LICENSE), alongside copyright for this fork's modifications.
 
@@ -76,11 +76,11 @@ If you use "Inspect Element" on the calendar, you will notice that the CSS class
 
 ## Compatibility
 
-`obsidian-calendar-plugin` currently requires Obsidian v0.9.11 or above to work properly.
+Multi Note Calendar currently requires Obsidian v0.9.11 or above to work properly.
 
 ## Installation
 
-This beta is not yet listed in Obsidian's Community Plugins directory. For testing, install it manually or through BRAT from this repository.
+Install Multi Note Calendar from Obsidian's Community Plugins directory after it is published. Until then, it can be installed manually or through BRAT from this repository.
 
 ## FAQ
 
