@@ -10,7 +10,7 @@ Example matches for one date:
 - `Work log/work log 20260529.md`
 - `Meeting notes/team sync 20260529.md`
 
-![Multi Note Calendar preview](./images/multi-note-calendar.png)
+![Multi Note Calendar preview](./images/multi-note-calendar-generic.png)
 
 ## Highlights
 
