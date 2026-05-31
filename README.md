@@ -1,27 +1,47 @@
 # Calendar Hub
 
-Calendar Hub turns the calendar sidebar into a hub for your daily notes. Instead of
-mapping each day to a single note, it surfaces **every note created on a given day**
-wherever it lives in your vault, so you can find, open, and manage them all in one place.
+> One calendar, **every** note from that day — no matter which folder it lives in.
+
+Most calendar plugins map **one note per day**. Calendar Hub doesn't: click a date and it
+surfaces **every note dated to that day** — by the date in its filename or frontmatter —
+wherever it lives in your vault, so you can find, open, and manage them all from a single sidebar.
+
+![Calendar Hub preview](./images/calendar-hub-preview.png)
 
 ## Why Calendar Hub?
 
-If you generate a lot of notes, for example with AI tools, files quickly scatter
-across folders and become hard to track down. Calendar Hub groups them by the day
-they were created, giving you a single place to see everything from a given day
-without hunting through your folder tree.
+If you generate a lot of notes — daily logs, meeting notes, AI-generated summaries — they
+scatter across folders and get hard to track down. A normal calendar only knows about your one
+configured Daily Note, so everything else stays invisible.
 
-Example matches for one date:
+Calendar Hub groups notes by the day they belong to, so a single date can surface many notes at
+once:
 
 - `Daily/2026-05-29.md`
 - `Work log/work log 20260529.md`
 - `Meeting notes/team sync 20260529.md`
 
-![Calendar Hub preview](./images/calendar-hub-preview.png)
+Click the day, see all three.
+
+## Calendar Hub vs. the original Calendar
+
+Calendar Hub is a fork of Liam Cain's Calendar, so everything you expect still works — the
+monthly view, daily and weekly notes, note-count dots, and "reveal active note." It adds what
+Calendar was missing:
+
+| | Calendar | Calendar Hub |
+|---|---|---|
+| Notes per day | One configured Daily Note | **Every matching note, in any folder** |
+| Folder scope | Daily Notes folder only | **Whole vault, or just the folders you pick** |
+| Date detection | Daily Notes filename | Filename + **extra formats** + **frontmatter fallback** |
+| Weekly notes · dots · theming | ✓ | ✓ |
+
+It uses its own plugin id (`calendar-hub`), so you can run it alongside Calendar and switch only
+once you are happy.
 
 ## Features
 
-- See all notes created on any selected day, regardless of folder.
+- See all notes dated to any selected day (by filename or frontmatter), regardless of folder.
 - Open and manage the day's notes from one panel.
 - Scan the whole vault or limit matching to specific folders.
 - Adjust folder filters directly from the calendar sidebar.
@@ -57,21 +77,21 @@ The folder filter can also be adjusted directly from the calendar sidebar.
 
 ## Installation
 
-Install through Obsidian's Community Plugins directory after publication.
+Calendar Hub is available in the Obsidian **Community Plugins** directory:
 
-Before publication, install with BRAT using this repository:
+1. Open **Settings → Community plugins → Browse**.
+2. Search for **Calendar Hub** and install it.
+3. Enable it, then open the view from the ribbon icon or the **Open calendar view** command.
 
-```text
-HWY1dot0/calendar-hub
-```
+<details>
+<summary>Manual or beta install</summary>
 
-Manual installation uses the files attached to each GitHub release:
+Install the latest commit with [BRAT](https://github.com/TfTHacker/obsidian42-brat) using the
+repository `HWY1dot0/calendar-hub`, or download `main.js`, `manifest.json`, and `styles.css` from
+a [release](https://github.com/HWY1dot0/calendar-hub/releases) and copy them into
+`.obsidian/plugins/calendar-hub/` inside your vault, then reload Obsidian and enable the plugin.
 
-- `main.js`
-- `manifest.json`
-- `styles.css`
-
-Copy those files into `.obsidian/plugins/calendar-hub/` inside your vault, then reload Obsidian and enable the plugin.
+</details>
 
 ## Commands
 
@@ -98,7 +118,7 @@ Calendar Hub uses its own plugin id, `calendar-hub`, so it can be installed sepa
 ## Development
 
 ```bash
-npm test
+npm install
 npm run build
 ```
 
