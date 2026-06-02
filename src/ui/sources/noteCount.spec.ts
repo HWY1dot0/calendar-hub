@@ -4,7 +4,7 @@ jest.mock("svelte/store", () => ({
   get: jest.fn(),
 }));
 
-jest.mock("obsidian-daily-notes-interface", () => ({
+jest.mock("src/io/weeklyNotes", () => ({
   getWeeklyNote: jest.fn(),
 }));
 

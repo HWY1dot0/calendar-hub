@@ -2,8 +2,6 @@ import type { Moment } from "moment";
 import {
   getDailyNoteSettings,
   getDateFromFile,
-  getWeeklyNote,
-  getWeeklyNoteSettings,
 } from "obsidian-daily-notes-interface";
 import { FileView, TAbstractFile, TFile, ItemView, WorkspaceLeaf } from "obsidian";
 import { get } from "svelte/store";
@@ -11,7 +9,12 @@ import { get } from "svelte/store";
 import { TRIGGER_ON_OPEN, VIEW_TYPE_CALENDAR } from "src/constants";
 import { tryToCreateDailyNote } from "src/io/dailyNotes";
 import { getDailyNotesForDate } from "src/io/dailyNoteIndex";
-import { tryToCreateWeeklyNote } from "src/io/weeklyNotes";
+import {
+  getWeekDateFromFile,
+  getWeeklyNote,
+  getWeeklyNoteSettings,
+  tryToCreateWeeklyNote,
+} from "src/io/weeklyNotes";
 import type { ISettings } from "src/settings";
 import type CalendarPlugin from "./main";
 
@@ -208,7 +211,7 @@ export default class CalendarView extends ItemView {
       dailyNotes.reindex();
       this.updateActiveFile();
     }
-    if (getDateFromFile(file, "week")) {
+    if (getWeekDateFromFile(file)) {
       weeklyNotes.reindex();
       this.updateActiveFile();
     }
@@ -221,7 +224,7 @@ export default class CalendarView extends ItemView {
     if (!(file instanceof TFile)) {
       return;
     }
-    const date = getDateFromFile(file, "day") || getDateFromFile(file, "week");
+    const date = getDateFromFile(file, "day") || getWeekDateFromFile(file);
     if (date && this.calendar) {
       this.calendar.tick();
     }
@@ -239,7 +242,7 @@ export default class CalendarView extends ItemView {
         dailyNotes.reindex();
         this.calendar.tick();
       }
-      if (getDateFromFile(file, "week")) {
+      if (getWeekDateFromFile(file)) {
         weeklyNotes.reindex();
         this.calendar.tick();
       }
