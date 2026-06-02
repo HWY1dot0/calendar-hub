@@ -198,13 +198,11 @@ export default class CalendarView extends ItemView {
   }
 
   private async onFileDeleted(file: TAbstractFile): Promise<void> {
-    if (this.refreshCustomDailyNoteIndex(file)) {
-      return;
-    }
+    const refreshedDaily = this.refreshCustomDailyNoteIndex(file);
     if (!(file instanceof TFile)) {
       return;
     }
-    if (getDayDateFromFile(file)) {
+    if (!refreshedDaily && getDayDateFromFile(file)) {
       dailyNotes.reindex();
       this.updateActiveFile();
     }
@@ -228,21 +226,20 @@ export default class CalendarView extends ItemView {
   }
 
   private onFileCreated(file: TAbstractFile): void {
-    if (this.app.workspace.layoutReady && this.calendar) {
-      if (this.refreshCustomDailyNoteIndex(file)) {
-        return;
-      }
-      if (!(file instanceof TFile)) {
-        return;
-      }
-      if (getDayDateFromFile(file)) {
-        dailyNotes.reindex();
-        this.calendar.tick();
-      }
-      if (getWeekDateFromFile(file)) {
-        weeklyNotes.reindex();
-        this.calendar.tick();
-      }
+    if (!this.app.workspace.layoutReady || !this.calendar) {
+      return;
+    }
+    const refreshedDaily = this.refreshCustomDailyNoteIndex(file);
+    if (!(file instanceof TFile)) {
+      return;
+    }
+    if (!refreshedDaily && getDayDateFromFile(file)) {
+      dailyNotes.reindex();
+      this.calendar.tick();
+    }
+    if (getWeekDateFromFile(file)) {
+      weeklyNotes.reindex();
+      this.calendar.tick();
     }
   }
 
@@ -253,6 +250,7 @@ export default class CalendarView extends ItemView {
       (this.isMarkdownFile(file) || oldPath.endsWith(".md"))
     ) {
       dailyNotes.reindex();
+      weeklyNotes.reindex();
       this.calendar.tick();
     }
   }
