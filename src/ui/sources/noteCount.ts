@@ -1,11 +1,16 @@
 import type { Moment } from "moment";
 import type { ICalendarSource, IDayMetadata, IDot } from "obsidian-calendar-ui";
-import { getWeeklyNote } from "obsidian-daily-notes-interface";
 import { get } from "svelte/store";
 
 import { getDailyNotesForDate } from "src/io/dailyNoteIndex";
+import { getWeeklyNotesForDate } from "src/io/weeklyNotes";
 
-import { dailyNotes, dailyNotesByDate, weeklyNotes } from "../stores";
+import {
+  dailyNotes,
+  dailyNotesByDate,
+  weeklyNotes,
+  weeklyNotesByDate,
+} from "../stores";
 
 const NUM_MAX_DOTS = 5;
 
@@ -37,10 +42,14 @@ export const noteCountSource: ICalendarSource = {
   },
 
   getWeeklyMetadata: async (date: Moment): Promise<IDayMetadata> => {
-    const file = getWeeklyNote(date, get(weeklyNotes));
+    const notes = getWeeklyNotesForDate(
+      date,
+      get(weeklyNotesByDate),
+      get(weeklyNotes)
+    );
 
     return {
-      dots: getNoteCountAsDots(file ? 1 : 0),
+      dots: getNoteCountAsDots(notes.length),
     };
   },
 };

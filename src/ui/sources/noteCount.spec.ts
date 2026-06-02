@@ -4,8 +4,8 @@ jest.mock("svelte/store", () => ({
   get: jest.fn(),
 }));
 
-jest.mock("obsidian-daily-notes-interface", () => ({
-  getWeeklyNote: jest.fn(),
+jest.mock("src/io/weeklyNotes", () => ({
+  getWeeklyNotesForDate: jest.fn(),
 }));
 
 jest.mock("src/io/dailyNoteIndex", () => ({
@@ -16,6 +16,7 @@ jest.mock("../stores", () => ({
   dailyNotes: {},
   dailyNotesByDate: {},
   weeklyNotes: {},
+  weeklyNotesByDate: {},
 }));
 
 describe("noteCountSource", () => {
