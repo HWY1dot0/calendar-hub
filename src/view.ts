@@ -1,13 +1,10 @@
 import type { Moment } from "moment";
-import {
-  getDailyNoteSettings,
-  getDateFromFile,
-} from "obsidian-daily-notes-interface";
+import { getDailyNoteSettings } from "obsidian-daily-notes-interface";
 import { FileView, TAbstractFile, TFile, ItemView, WorkspaceLeaf } from "obsidian";
 import { get } from "svelte/store";
 
 import { TRIGGER_ON_OPEN, VIEW_TYPE_CALENDAR } from "src/constants";
-import { tryToCreateDailyNote } from "src/io/dailyNotes";
+import { getDayDateFromFile, tryToCreateDailyNote } from "src/io/dailyNotes";
 import { getDailyNotesForDate } from "src/io/dailyNoteIndex";
 import {
   getWeekDateFromFile,
@@ -207,7 +204,7 @@ export default class CalendarView extends ItemView {
     if (!(file instanceof TFile)) {
       return;
     }
-    if (getDateFromFile(file, "day")) {
+    if (getDayDateFromFile(file)) {
       dailyNotes.reindex();
       this.updateActiveFile();
     }
@@ -224,7 +221,7 @@ export default class CalendarView extends ItemView {
     if (!(file instanceof TFile)) {
       return;
     }
-    const date = getDateFromFile(file, "day") || getWeekDateFromFile(file);
+    const date = getDayDateFromFile(file) || getWeekDateFromFile(file);
     if (date && this.calendar) {
       this.calendar.tick();
     }
@@ -238,7 +235,7 @@ export default class CalendarView extends ItemView {
       if (!(file instanceof TFile)) {
         return;
       }
-      if (getDateFromFile(file, "day")) {
+      if (getDayDateFromFile(file)) {
         dailyNotes.reindex();
         this.calendar.tick();
       }
@@ -286,7 +283,7 @@ export default class CalendarView extends ItemView {
 
     if (activeLeaf.view instanceof FileView) {
       // Check to see if the active note is a daily-note
-      let date = getDateFromFile(activeLeaf.view.file, "day");
+      let date = getDayDateFromFile(activeLeaf.view.file);
       if (date) {
         this.calendar.$set({ displayedMonth: date });
         return;
