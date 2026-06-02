@@ -9,12 +9,16 @@ import {
   singleDailyNotesToDailyNotesByDate,
 } from "src/io/dailyNoteIndex";
 import { getAllDailyNotes } from "src/io/dailyNotes";
-import { getAllWeeklyNotes } from "src/io/weeklyNotes";
+import {
+  buildWeeklyNotesByDate,
+  getAllWeeklyNotes,
+} from "src/io/weeklyNotes";
 
 import { getDateUIDFromFile } from "./utils";
 
 export const settings = writable<ISettings>(defaultSettings);
 export const dailyNotesByDate = writable<DailyNotesByDate>({});
+export const weeklyNotesByDate = writable<DailyNotesByDate>({});
 
 function createDailyNotesStore() {
   let hasError = false;
@@ -66,8 +70,21 @@ function createWeeklyNotesStore() {
   return {
     reindex: () => {
       try {
-        const weeklyNotes = getAllWeeklyNotes();
+        const currentSettings = get(settings);
+        const notesByDate = currentSettings.shouldIndexWeeklyNotesInAllFolders
+          ? buildWeeklyNotesByDate(window.app.vault.getMarkdownFiles(), {
+              filenameDateFormat: currentSettings.weeklyNoteFilenameDateFormat,
+              frontmatterDateFields: currentSettings
+                .shouldIndexWeeklyNotesFromFrontmatter
+                ? currentSettings.weeklyNoteFrontmatterDateFields
+                : "",
+              includedFolders: currentSettings.weeklyNoteIncludedFolders,
+            })
+          : singleDailyNotesToDailyNotesByDate(getAllWeeklyNotes());
+        const weeklyNotes = dailyNotesByDateToSingleNotes(notesByDate);
+
         store.set(weeklyNotes);
+        weeklyNotesByDate.set(notesByDate);
         hasError = false;
       } catch (err) {
         if (!hasError) {
@@ -78,6 +95,7 @@ function createWeeklyNotesStore() {
           );
         }
         store.set({});
+        weeklyNotesByDate.set({});
         hasError = true;
       }
     },

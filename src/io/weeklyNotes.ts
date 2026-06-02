@@ -3,8 +3,19 @@ import { Notice, TFile, TFolder, Vault, normalizePath } from "obsidian";
 import { getDateUID } from "obsidian-daily-notes-interface";
 
 import { DEFAULT_WEEK_FORMAT, PLUGIN_ID } from "src/constants";
+import { buildNotesByDate } from "src/io/dailyNoteIndex";
+import type {
+  DailyNotesByDate,
+  DailyNotesByDateMap,
+} from "src/io/dailyNoteIndex";
 import type { ISettings } from "src/settings";
 import { createConfirmationDialog } from "src/ui/modal";
+
+export interface WeeklyIndexOptions {
+  filenameDateFormat?: string;
+  frontmatterDateFields?: string;
+  includedFolders?: string;
+}
 
 export interface IWeeklyNoteSettings {
   format: string;
@@ -85,6 +96,43 @@ export function getWeeklyNote(
   weeklyNotes: Record<string, TFile>
 ): TFile | null {
   return weeklyNotes[getDateUID(date, "week")] ?? null;
+}
+
+/**
+ * Index every note that belongs to a week (by week-format filename or
+ * frontmatter), across the configured folders, allowing multiple notes per
+ * week. Mirrors buildDailyNotesByDate, driven by Calendar Hub's weekly format.
+ */
+export function buildWeeklyNotesByDate(
+  files: TFile[],
+  options: WeeklyIndexOptions = {}
+): DailyNotesByDate {
+  return buildNotesByDate(files, {
+    format: getWeeklyNoteSettings().format,
+    granularity: "week",
+    filenameDateFormat: options.filenameDateFormat,
+    frontmatterDateFields: options.frontmatterDateFields,
+    includedFolders: options.includedFolders,
+  });
+}
+
+/**
+ * Return every note mapped to the week containing `date`. Falls back to the
+ * single weekly-note map when the aggregate index has no entry.
+ */
+export function getWeeklyNotesForDate(
+  date: Moment,
+  notesByDate: DailyNotesByDate,
+  fallback: DailyNotesByDateMap | null
+): TFile[] {
+  const id = getDateUID(date, "week");
+  const matching = notesByDate?.[id];
+  if (matching?.length) {
+    return matching;
+  }
+
+  const note = getWeeklyNote(date, fallback ?? {});
+  return note ? [note] : [];
 }
 
 export function getAllWeeklyNotes(): Record<string, TFile> {

@@ -12,17 +12,23 @@
 
   import type { ISettings } from "src/settings";
   import { getDailyNotesForDate } from "src/io/dailyNoteIndex";
+  import { getWeeklyNotesForDate } from "src/io/weeklyNotes";
   import {
     activeFile,
     dailyNotes,
     dailyNotesByDate,
     settings,
     weeklyNotes,
+    weeklyNotesByDate,
   } from "./stores";
 
   let today: Moment;
   let selectedDate: Moment = null;
+  let selectedWeek: Moment = null;
+  let selectionMode: "day" | "week" = "day";
   let selectedNotes: TFile[] = [];
+  let panelLabel = "";
+  let hasSelection = false;
   let isScanFoldersOpen = false;
   let scanFoldersValue = "";
   let scanFoldersSummary = "";
@@ -32,9 +38,20 @@
   $: if (!selectedDate && today) {
     selectedDate = today;
   }
-  $: selectedNotes = selectedDate
-    ? getDailyNotesForDate(selectedDate, $dailyNotesByDate, $dailyNotes)
-    : [];
+  $: selectedNotes =
+    selectionMode === "week" && selectedWeek
+      ? getWeeklyNotesForDate(selectedWeek, $weeklyNotesByDate, $weeklyNotes)
+      : selectedDate
+      ? getDailyNotesForDate(selectedDate, $dailyNotesByDate, $dailyNotes)
+      : [];
+  $: hasSelection =
+    selectionMode === "week" ? !!selectedWeek : !!selectedDate;
+  $: panelLabel =
+    selectionMode === "week" && selectedWeek
+      ? `${selectedWeek.format("GGGG")} · ${selectedWeek.format("[W]WW")}`
+      : selectedDate
+      ? selectedDate.format("LL")
+      : "";
   $: if (
     !isScanFoldersOpen &&
     scanFoldersValue !== $settings.dailyNoteIncludedFolders
@@ -89,8 +106,15 @@
   });
 
   function handleClickDay(date: Moment, isMetaPressed: boolean): boolean {
+    selectionMode = "day";
     selectedDate = date.clone();
     return onClickDay(date, isMetaPressed);
+  }
+
+  function handleClickWeek(date: Moment, isMetaPressed: boolean): boolean {
+    selectionMode = "week";
+    selectedWeek = date.clone();
+    return onClickWeek(date, isMetaPressed);
   }
 
   function handleOpenDayNote(event: MouseEvent, file: TFile): void {
@@ -156,17 +180,17 @@
   {onContextMenuDay}
   {onContextMenuWeek}
   onClickDay={handleClickDay}
-  {onClickWeek}
+  onClickWeek={handleClickWeek}
   bind:displayedMonth
   localeData={today.localeData()}
   selectedId={$activeFile}
   showWeekNums={$settings.showWeeklyNote}
 />
 
-{#if selectedDate}
+{#if hasSelection}
   <section class="calendar-note-panel">
     <div class="calendar-note-panel-header">
-      <span>{selectedDate.format("LL")}</span>
+      <span>{panelLabel}</span>
       <span class="calendar-note-count">
         {formatNoteCount(selectedNotes.length)}
       </span>

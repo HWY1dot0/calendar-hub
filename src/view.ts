@@ -9,6 +9,7 @@ import { getDailyNotesForDate } from "src/io/dailyNoteIndex";
 import {
   getWeekDateFromFile,
   getWeeklyNote,
+  getWeeklyNotesForDate,
   getWeeklyNoteSettings,
   tryToCreateWeeklyNote,
 } from "src/io/weeklyNotes";
@@ -22,6 +23,7 @@ import {
   dailyNotes,
   dailyNotesByDate,
   weeklyNotes,
+  weeklyNotesByDate,
   settings,
 } from "./ui/stores";
 import {
@@ -206,17 +208,28 @@ export default class CalendarView extends ItemView {
       dailyNotes.reindex();
       this.updateActiveFile();
     }
-    if (getWeekDateFromFile(file)) {
+    if (
+      this.settings?.shouldIndexWeeklyNotesInAllFolders ||
+      getWeekDateFromFile(file)
+    ) {
       weeklyNotes.reindex();
       this.updateActiveFile();
     }
   }
 
   private async onFileModified(file: TAbstractFile): Promise<void> {
-    if (this.refreshCustomDailyNoteIndex(file)) {
+    const refreshedDaily = this.refreshCustomDailyNoteIndex(file);
+    if (!(file instanceof TFile)) {
       return;
     }
-    if (!(file instanceof TFile)) {
+    if (this.settings?.shouldIndexWeeklyNotesInAllFolders) {
+      weeklyNotes.reindex();
+      if (this.calendar) {
+        this.calendar.tick();
+      }
+      return;
+    }
+    if (refreshedDaily) {
       return;
     }
     const date = getDayDateFromFile(file) || getWeekDateFromFile(file);
@@ -237,7 +250,10 @@ export default class CalendarView extends ItemView {
       dailyNotes.reindex();
       this.calendar.tick();
     }
-    if (getWeekDateFromFile(file)) {
+    if (
+      this.settings?.shouldIndexWeeklyNotesInAllFolders ||
+      getWeekDateFromFile(file)
+    ) {
       weeklyNotes.reindex();
       this.calendar.tick();
     }
@@ -251,6 +267,7 @@ export default class CalendarView extends ItemView {
     ) {
       dailyNotes.reindex();
       weeklyNotes.reindex();
+      this.updateActiveFile();
       this.calendar.tick();
     }
   }
@@ -301,27 +318,26 @@ export default class CalendarView extends ItemView {
     date: Moment,
     inNewSplit: boolean
   ): Promise<void> {
-    const { workspace } = this.app;
+    const existingFiles = this.getWeeklyNotes(date);
 
-    const startOfWeek = date.clone().startOf("week");
-
-    const existingFile = getWeeklyNote(date, get(weeklyNotes));
-
-    if (!existingFile) {
-      // File doesn't exist
+    if (!existingFiles.length) {
+      const startOfWeek = date.clone().startOf("week");
       tryToCreateWeeklyNote(startOfWeek, inNewSplit, this.settings, (file) => {
         activeFile.setFile(file);
       });
       return;
     }
 
-    const leaf = inNewSplit
-      ? workspace.splitActiveLeaf()
-      : workspace.getUnpinnedLeaf();
-    await leaf.openFile(existingFile);
+    if (existingFiles.length > 1) {
+      // Multiple notes for the week — surfaced in the panel below the calendar.
+      return;
+    }
 
-    activeFile.setFile(existingFile);
-    workspace.setActiveLeaf(leaf, true, true)
+    await this.openDailyNoteFile(existingFiles[0], inNewSplit);
+  }
+
+  private getWeeklyNotes(date: Moment): TFile[] {
+    return getWeeklyNotesForDate(date, get(weeklyNotesByDate), get(weeklyNotes));
   }
 
   async openOrCreateDailyNote(

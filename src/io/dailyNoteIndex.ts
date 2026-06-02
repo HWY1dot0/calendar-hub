@@ -16,16 +16,30 @@ export interface DailyNoteIndexOptions {
   includedFolders?: string;
 }
 
-export function buildDailyNotesByDate(
+export type NoteGranularity = "day" | "week";
+
+export interface BuildNotesByDateOptions {
+  format: string;
+  granularity: NoteGranularity;
+  filenameDateFormat?: string;
+  frontmatterDateFields?: string;
+  includedFolders?: string;
+}
+
+/**
+ * Generic note indexer shared by daily and weekly views. Buckets every file
+ * that resolves to a date (via filename or frontmatter) by its date UID at the
+ * given granularity, allowing multiple notes per bucket.
+ */
+export function buildNotesByDate(
   files: TFile[],
-  options: DailyNoteIndexOptions | string = ""
+  options: BuildNotesByDateOptions
 ): DailyNotesByDate {
   const notesByDate: DailyNotesByDate = {};
-  const indexOptions = normalizeIndexOptions(options);
-  const { format = DEFAULT_DAILY_NOTE_FORMAT } = getDailyNoteSettings();
-  const includedFolders = getIncludedFolders(indexOptions.includedFolders ?? "");
+  const { format, granularity } = options;
+  const includedFolders = getIncludedFolders(options.includedFolders ?? "");
   const frontmatterDateFields = getListValues(
-    indexOptions.frontmatterDateFields ?? ""
+    options.frontmatterDateFields ?? ""
   );
 
   files.forEach((file) => {
@@ -36,30 +50,45 @@ export function buildDailyNotesByDate(
     const date = getDateFromFilename(
       file.basename,
       format,
-      indexOptions.filenameDateFormat
+      options.filenameDateFormat
     );
     const noteDate = date.isValid()
       ? date
       : getDateFromFrontmatter(
           file,
           frontmatterDateFields,
-          getExtractionFormats(format, indexOptions.filenameDateFormat ?? "")
+          getExtractionFormats(format, options.filenameDateFormat ?? "")
         );
     if (!noteDate.isValid()) {
       return;
     }
 
-    const id = getDateUID(noteDate, "day");
+    const id = getDateUID(noteDate, granularity);
     const notes = notesByDate[id] ?? [];
     notes.push(file);
     notesByDate[id] = notes;
   });
 
-  Object.values(notesByDate).forEach((files) =>
-    files.sort((a, b) => a.path.localeCompare(b.path))
+  Object.values(notesByDate).forEach((notes) =>
+    notes.sort((a, b) => a.path.localeCompare(b.path))
   );
 
   return notesByDate;
+}
+
+export function buildDailyNotesByDate(
+  files: TFile[],
+  options: DailyNoteIndexOptions | string = ""
+): DailyNotesByDate {
+  const indexOptions = normalizeIndexOptions(options);
+  const { format = DEFAULT_DAILY_NOTE_FORMAT } = getDailyNoteSettings();
+  return buildNotesByDate(files, {
+    format,
+    granularity: "day",
+    filenameDateFormat: indexOptions.filenameDateFormat,
+    frontmatterDateFields: indexOptions.frontmatterDateFields,
+    includedFolders: indexOptions.includedFolders,
+  });
 }
 
 function normalizeIndexOptions(

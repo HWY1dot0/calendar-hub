@@ -5,7 +5,7 @@ jest.mock("svelte/store", () => ({
 }));
 
 jest.mock("src/io/weeklyNotes", () => ({
-  getWeeklyNote: jest.fn(),
+  getWeeklyNotesForDate: jest.fn(),
 }));
 
 jest.mock("src/io/dailyNoteIndex", () => ({
@@ -16,6 +16,7 @@ jest.mock("../stores", () => ({
   dailyNotes: {},
   dailyNotesByDate: {},
   weeklyNotes: {},
+  weeklyNotesByDate: {},
 }));
 
 describe("noteCountSource", () => {

@@ -21,6 +21,11 @@ export interface ISettings {
   weeklyNoteFormat: string;
   weeklyNoteTemplate: string;
   weeklyNoteFolder: string;
+  shouldIndexWeeklyNotesInAllFolders: boolean;
+  weeklyNoteFilenameDateFormat: string;
+  shouldIndexWeeklyNotesFromFrontmatter: boolean;
+  weeklyNoteFrontmatterDateFields: string;
+  weeklyNoteIncludedFolders: string;
 
   localeOverride: ILocaleOverride;
 }
@@ -50,6 +55,11 @@ export const defaultSettings = Object.freeze({
   weeklyNoteFormat: "",
   weeklyNoteTemplate: "",
   weeklyNoteFolder: "",
+  shouldIndexWeeklyNotesInAllFolders: false,
+  weeklyNoteFilenameDateFormat: "",
+  shouldIndexWeeklyNotesFromFrontmatter: false,
+  weeklyNoteFrontmatterDateFields: "week, weekly_date",
+  weeklyNoteIncludedFolders: "",
 
   localeOverride: "system-default",
 });
@@ -111,6 +121,11 @@ export class CalendarSettingsTab extends PluginSettingTab {
       this.addWeeklyNoteFormatSetting();
       this.addWeeklyNoteTemplateSetting();
       this.addWeeklyNoteFolderSetting();
+      this.addIndexWeeklyNotesInAllFoldersSetting();
+      this.addWeeklyNoteIncludedFoldersSetting();
+      this.addWeeklyNoteFilenameDateFormatSetting();
+      this.addIndexWeeklyNotesFromFrontmatterSetting();
+      this.addWeeklyNoteFrontmatterDateFieldsSetting();
     }
 
     this.containerEl.createEl("h3", {
@@ -294,6 +309,91 @@ export class CalendarSettingsTab extends PluginSettingTab {
         textfield.setValue(this.plugin.options.weeklyNoteFolder);
         textfield.onChange(async (value) => {
           this.plugin.writeOptions(() => ({ weeklyNoteFolder: value }));
+        });
+      });
+  }
+
+  addIndexWeeklyNotesInAllFoldersSetting(): void {
+    new Setting(this.containerEl)
+      .setName("Detect weekly notes in all folders")
+      .setDesc(
+        "Find every Markdown file that resolves to a week, even outside the weekly notes folder. Matching notes for the selected week appear below the calendar."
+      )
+      .addToggle((toggle) => {
+        toggle.setValue(this.plugin.options.shouldIndexWeeklyNotesInAllFolders);
+        toggle.onChange(async (value) => {
+          this.plugin.writeOptions(() => ({
+            shouldIndexWeeklyNotesInAllFolders: value,
+          }));
+        });
+      });
+  }
+
+  addWeeklyNoteIncludedFoldersSetting(): void {
+    new Setting(this.containerEl)
+      .setName("Folders to scan for weekly notes")
+      .setDesc(
+        "Optional. Leave blank to scan the whole vault. Add comma-separated folder paths to limit weekly filename and frontmatter matching."
+      )
+      .addTextArea((textarea) => {
+        textarea.setPlaceholder("Journal, Work/Weekly, Reviews");
+        textarea.setValue(this.plugin.options.weeklyNoteIncludedFolders);
+        textarea.onChange(async (value) => {
+          this.plugin.writeOptions(() => ({
+            weeklyNoteIncludedFolders: value,
+          }));
+        });
+      });
+  }
+
+  addWeeklyNoteFilenameDateFormatSetting(): void {
+    new Setting(this.containerEl)
+      .setName("Week format inside weekly note filenames")
+      .setDesc(
+        "Optional. Calendar Hub already looks for the weekly note format anywhere in the file name. Add extra comma-separated formats here, such as GGGG-[W]WW for files like 'review 2026-W23.md'."
+      )
+      .addText((textfield) => {
+        textfield.setPlaceholder("GGGG-[W]WW");
+        textfield.setValue(this.plugin.options.weeklyNoteFilenameDateFormat);
+        textfield.onChange(async (value) => {
+          this.plugin.writeOptions(() => ({
+            weeklyNoteFilenameDateFormat: value,
+          }));
+        });
+      });
+  }
+
+  addIndexWeeklyNotesFromFrontmatterSetting(): void {
+    new Setting(this.containerEl)
+      .setName("Use frontmatter fallback for weekly notes")
+      .setDesc(
+        "When a file name does not contain a matching week, read the configured frontmatter fields and map the note to that week (a week string or a date both work)."
+      )
+      .addToggle((toggle) => {
+        toggle.setValue(
+          this.plugin.options.shouldIndexWeeklyNotesFromFrontmatter
+        );
+        toggle.onChange(async (value) => {
+          this.plugin.writeOptions(() => ({
+            shouldIndexWeeklyNotesFromFrontmatter: value,
+          }));
+        });
+      });
+  }
+
+  addWeeklyNoteFrontmatterDateFieldsSetting(): void {
+    new Setting(this.containerEl)
+      .setName("Weekly frontmatter fields")
+      .setDesc(
+        "Comma-separated field names to read when weekly frontmatter fallback is enabled. Nested fields can use dot notation, such as calendar.week."
+      )
+      .addText((textfield) => {
+        textfield.setPlaceholder("week, weekly_date");
+        textfield.setValue(this.plugin.options.weeklyNoteFrontmatterDateFields);
+        textfield.onChange(async (value) => {
+          this.plugin.writeOptions(() => ({
+            weeklyNoteFrontmatterDateFields: value,
+          }));
         });
       });
   }
