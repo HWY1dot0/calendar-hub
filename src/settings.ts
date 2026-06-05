@@ -42,7 +42,7 @@ const weekdays = [
 
 export const defaultSettings = Object.freeze({
   shouldConfirmBeforeCreate: true,
-  shouldIndexDailyNotesInAllFolders: false,
+  shouldIndexDailyNotesInAllFolders: true,
   dailyNoteFilenameDateFormat: "",
   shouldIndexDailyNotesFromFrontmatter: false,
   dailyNoteFrontmatterDateFields: "date, daily_date, calendar_date",
@@ -55,7 +55,7 @@ export const defaultSettings = Object.freeze({
   weeklyNoteFormat: "",
   weeklyNoteTemplate: "",
   weeklyNoteFolder: "",
-  shouldIndexWeeklyNotesInAllFolders: false,
+  shouldIndexWeeklyNotesInAllFolders: true,
   weeklyNoteFilenameDateFormat: "",
   shouldIndexWeeklyNotesFromFrontmatter: false,
   weeklyNoteFrontmatterDateFields: "week, weekly_date",
