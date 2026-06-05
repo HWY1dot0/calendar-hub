@@ -5,9 +5,9 @@
   import type { TFile } from "obsidian";
   import {
     Calendar as CalendarBase,
-    ICalendarSource,
     configureGlobalMomentLocale,
   } from "obsidian-calendar-ui";
+  import type { ICalendarSource } from "obsidian-calendar-ui";
   import { onDestroy } from "svelte";
 
   import type { ISettings } from "src/settings";
