@@ -1,4 +1,4 @@
-import type { Moment } from "moment";
+import type { DurationInputArg2, Moment } from "moment";
 import { Notice, TFile, TFolder, Vault, normalizePath } from "obsidian";
 import { getDateUID } from "obsidian-daily-notes-interface";
 
@@ -36,8 +36,7 @@ export interface IWeeklyNoteSettings {
  * behaviour and the settings tab).
  */
 export function getWeeklyNoteSettings(): IWeeklyNoteSettings {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const plugins = (window.app as any).plugins;
+  const { plugins } = window.app;
 
   const periodicNotes = plugins.getPlugin("periodic-notes");
   if (periodicNotes && periodicNotes.settings?.weekly?.enabled) {
@@ -68,7 +67,7 @@ function removeEscapedCharacters(format: string): string {
  * from `obsidian-daily-notes-interface`, but driven by our own settings.
  */
 export function getWeekDateFromFile(file: TFile): Moment | null {
-  const format = getWeeklyNoteSettings().format.split("/").pop() as string;
+  const format = getWeeklyNoteSettings().format.split("/").pop() ?? "";
   const noteDate = window.moment(file.basename, format, true);
   if (!noteDate.isValid()) {
     return null;
@@ -224,7 +223,14 @@ export async function createWeeklyNote(date: Moment): Promise<TFile> {
       templateContents
         .replace(
           /{{\s*(date|time)\s*(([+-]\d+)([yqmwdhs]))?\s*(:.+?)?}}/gi,
-          (_, _timeOrDate, calc, timeDelta, unit, momentFormat) => {
+          (
+            _: string,
+            _timeOrDate: string,
+            calc: string,
+            timeDelta: string,
+            unit: string,
+            momentFormat: string
+          ) => {
             const now = window.moment();
             const currentDate = date.clone().set({
               hour: now.get("hour"),
@@ -232,7 +238,10 @@ export async function createWeeklyNote(date: Moment): Promise<TFile> {
               second: now.get("second"),
             });
             if (calc) {
-              currentDate.add(parseInt(timeDelta, 10), unit);
+              currentDate.add(
+                parseInt(timeDelta, 10),
+                unit as DurationInputArg2
+              );
             }
             if (momentFormat) {
               return currentDate.format(momentFormat.substring(1).trim());
@@ -244,7 +253,7 @@ export async function createWeeklyNote(date: Moment): Promise<TFile> {
         .replace(/{{\s*time\s*}}/gi, window.moment().format("HH:mm"))
         .replace(
           /{{\s*(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\s*:(.*?)}}/gi,
-          (_, dayOfWeek, momentFormat) => {
+          (_: string, dayOfWeek: string, momentFormat: string) => {
             const day = DAYS_OF_WEEK.indexOf(dayOfWeek.toLowerCase());
             return date.weekday(day).format(momentFormat.trim());
           }

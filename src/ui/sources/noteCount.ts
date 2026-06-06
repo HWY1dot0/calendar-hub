@@ -16,40 +16,40 @@ const NUM_MAX_DOTS = 5;
 
 export function getNoteCountAsDots(noteCount: number): IDot[] {
   const numSolidDots = Math.min(Math.max(noteCount, 0), NUM_MAX_DOTS);
-  const dots = [];
+  const dots: IDot[] = [];
 
   for (let i = 0; i < numSolidDots; i++) {
     dots.push({
       color: "default",
       isFilled: true,
-    });
+    } as IDot);
   }
 
   return dots;
 }
 
 export const noteCountSource: ICalendarSource = {
-  getDailyMetadata: async (date: Moment): Promise<IDayMetadata> => {
+  getDailyMetadata: (date: Moment): Promise<IDayMetadata> => {
     const notes = getDailyNotesForDate(
       date,
       get(dailyNotesByDate),
       get(dailyNotes)
     );
 
-    return {
+    return Promise.resolve({
       dots: getNoteCountAsDots(notes.length),
-    };
+    });
   },
 
-  getWeeklyMetadata: async (date: Moment): Promise<IDayMetadata> => {
+  getWeeklyMetadata: (date: Moment): Promise<IDayMetadata> => {
     const notes = getWeeklyNotesForDate(
       date,
       get(weeklyNotesByDate),
       get(weeklyNotes)
     );
 
-    return {
+    return Promise.resolve({
       dots: getNoteCountAsDots(notes.length),
-    };
+    });
   },
 };

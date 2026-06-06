@@ -16,19 +16,19 @@ const getStreakClasses = (file: TFile): string[] => {
 };
 
 export const streakSource: ICalendarSource = {
-  getDailyMetadata: async (date: Moment): Promise<IDayMetadata> => {
+  getDailyMetadata: (date: Moment): Promise<IDayMetadata> => {
     const file = getDailyNote(date, get(dailyNotes));
-    return {
+    return Promise.resolve({
       classes: getStreakClasses(file),
       dots: [],
-    };
+    });
   },
 
-  getWeeklyMetadata: async (date: Moment): Promise<IDayMetadata> => {
+  getWeeklyMetadata: (date: Moment): Promise<IDayMetadata> => {
     const file = getWeeklyNote(date, get(weeklyNotes));
-    return {
+    return Promise.resolve({
       classes: getStreakClasses(file),
       dots: [],
-    };
+    });
   },
 };

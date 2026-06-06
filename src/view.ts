@@ -33,8 +33,16 @@ import {
   tasksSource,
 } from "./ui/sources";
 
+// The calendar is a Svelte component; `.svelte` imports are untyped in the
+// TypeScript program, so describe the small surface the view actually uses.
+interface CalendarComponent {
+  tick(): void;
+  $set(props: { displayedMonth?: Moment }): void;
+  $destroy(): void;
+}
+
 export default class CalendarView extends ItemView {
-  private calendar: Calendar;
+  private calendar: CalendarComponent;
   private plugin: CalendarPlugin;
   private settings: ISettings;
 
@@ -42,27 +50,8 @@ export default class CalendarView extends ItemView {
     super(leaf);
     this.plugin = plugin;
 
-    this.openOrCreateDailyNote = this.openOrCreateDailyNote.bind(this);
-    this.openOrCreateWeeklyNote = this.openOrCreateWeeklyNote.bind(this);
-    this.openDailyNoteFile = this.openDailyNoteFile.bind(this);
-    this.updateSettings = this.updateSettings.bind(this);
-
-    this.onNoteSettingsUpdate = this.onNoteSettingsUpdate.bind(this);
-    this.onFileCreated = this.onFileCreated.bind(this);
-    this.onFileDeleted = this.onFileDeleted.bind(this);
-    this.onFileModified = this.onFileModified.bind(this);
-    this.onFileRenamed = this.onFileRenamed.bind(this);
-    this.onFileOpen = this.onFileOpen.bind(this);
-
-    this.onHoverDay = this.onHoverDay.bind(this);
-    this.onHoverWeek = this.onHoverWeek.bind(this);
-
-    this.onContextMenuDay = this.onContextMenuDay.bind(this);
-    this.onContextMenuWeek = this.onContextMenuWeek.bind(this);
-
     this.registerEvent(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (<any>this.app.workspace).on(
+      this.app.workspace.on(
         "periodic-notes:settings-updated",
         this.onNoteSettingsUpdate
       )
@@ -103,7 +92,7 @@ export default class CalendarView extends ItemView {
     return Promise.resolve();
   }
 
-  async onOpen(): Promise<void> {
+  onOpen(): Promise<void> {
     // Integration point: external plugins can listen for
     // `calendar-hub:open` to feed in additional sources.
     const sources = [
@@ -115,8 +104,7 @@ export default class CalendarView extends ItemView {
     this.app.workspace.trigger(TRIGGER_ON_OPEN, sources);
 
     this.calendar = new Calendar({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      target: (this as any).contentEl,
+      target: this.contentEl,
       props: {
         onClickDay: this.openOrCreateDailyNote,
         onClickWeek: this.openOrCreateWeeklyNote,
@@ -128,14 +116,16 @@ export default class CalendarView extends ItemView {
         onUpdateSettings: this.updateSettings,
         sources,
       },
-    });
+    }) as CalendarComponent;
+
+    return Promise.resolve();
   }
 
-  onHoverDay(
+  onHoverDay = (
     date: Moment,
     targetEl: EventTarget,
     isMetaPressed: boolean
-  ): void {
+  ): void => {
     if (!isMetaPressed) {
       return;
     }
@@ -148,13 +138,13 @@ export default class CalendarView extends ItemView {
       date.format(format),
       note?.path
     );
-  }
+  };
 
-  onHoverWeek(
+  onHoverWeek = (
     date: Moment,
     targetEl: EventTarget,
     isMetaPressed: boolean
-  ): void {
+  ): void => {
     if (!isMetaPressed) {
       return;
     }
@@ -167,9 +157,9 @@ export default class CalendarView extends ItemView {
       date.format(format),
       note?.path
     );
-  }
+  };
 
-  private onContextMenuDay(date: Moment, event: MouseEvent): void {
+  private onContextMenuDay = (date: Moment, event: MouseEvent): void => {
     const note = this.getDailyNotes(date)[0];
     if (!note) {
       // If no file exists for a given day, show nothing.
@@ -179,9 +169,9 @@ export default class CalendarView extends ItemView {
       x: event.pageX,
       y: event.pageY,
     });
-  }
+  };
 
-  private onContextMenuWeek(date: Moment, event: MouseEvent): void {
+  private onContextMenuWeek = (date: Moment, event: MouseEvent): void => {
     const note = getWeeklyNote(date, get(weeklyNotes));
     if (!note) {
       // If no file exists for a given day, show nothing.
@@ -191,15 +181,15 @@ export default class CalendarView extends ItemView {
       x: event.pageX,
       y: event.pageY,
     });
-  }
+  };
 
-  private onNoteSettingsUpdate(): void {
+  private onNoteSettingsUpdate = (): void => {
     dailyNotes.reindex();
     weeklyNotes.reindex();
     this.updateActiveFile();
-  }
+  };
 
-  private async onFileDeleted(file: TAbstractFile): Promise<void> {
+  private onFileDeleted = (file: TAbstractFile): void => {
     const refreshedDaily = this.refreshCustomDailyNoteIndex(file);
     if (!(file instanceof TFile)) {
       return;
@@ -215,9 +205,9 @@ export default class CalendarView extends ItemView {
       weeklyNotes.reindex();
       this.updateActiveFile();
     }
-  }
+  };
 
-  private async onFileModified(file: TAbstractFile): Promise<void> {
+  private onFileModified = (file: TAbstractFile): void => {
     const refreshedDaily = this.refreshCustomDailyNoteIndex(file);
     if (!(file instanceof TFile)) {
       return;
@@ -236,9 +226,9 @@ export default class CalendarView extends ItemView {
     if (date && this.calendar) {
       this.calendar.tick();
     }
-  }
+  };
 
-  private onFileCreated(file: TAbstractFile): void {
+  private onFileCreated = (file: TAbstractFile): void => {
     if (!this.app.workspace.layoutReady || !this.calendar) {
       return;
     }
@@ -257,9 +247,9 @@ export default class CalendarView extends ItemView {
       weeklyNotes.reindex();
       this.calendar.tick();
     }
-  }
+  };
 
-  private onFileRenamed(file: TAbstractFile, oldPath: string): void {
+  private onFileRenamed = (file: TAbstractFile, oldPath: string): void => {
     if (
       this.app.workspace.layoutReady &&
       this.calendar &&
@@ -270,13 +260,13 @@ export default class CalendarView extends ItemView {
       this.updateActiveFile();
       this.calendar.tick();
     }
-  }
+  };
 
-  public onFileOpen(_file: TFile): void {
+  public onFileOpen = (): void => {
     if (this.app.workspace.layoutReady) {
       this.updateActiveFile();
     }
-  }
+  };
 
   private updateActiveFile(): void {
     const { view } = this.app.workspace.activeLeaf;
@@ -314,17 +304,22 @@ export default class CalendarView extends ItemView {
     }
   }
 
-  async openOrCreateWeeklyNote(
+  openOrCreateWeeklyNote = async (
     date: Moment,
     inNewSplit: boolean
-  ): Promise<void> {
+  ): Promise<void> => {
     const existingFiles = this.getWeeklyNotes(date);
 
     if (!existingFiles.length) {
       const startOfWeek = date.clone().startOf("week");
-      tryToCreateWeeklyNote(startOfWeek, inNewSplit, this.settings, (file) => {
-        activeFile.setFile(file);
-      });
+      void tryToCreateWeeklyNote(
+        startOfWeek,
+        inNewSplit,
+        this.settings,
+        (file) => {
+          activeFile.setFile(file);
+        }
+      );
       return;
     }
 
@@ -334,20 +329,20 @@ export default class CalendarView extends ItemView {
     }
 
     await this.openDailyNoteFile(existingFiles[0], inNewSplit);
-  }
+  };
 
   private getWeeklyNotes(date: Moment): TFile[] {
     return getWeeklyNotesForDate(date, get(weeklyNotesByDate), get(weeklyNotes));
   }
 
-  async openOrCreateDailyNote(
+  openOrCreateDailyNote = async (
     date: Moment,
     inNewSplit: boolean
-  ): Promise<void> {
+  ): Promise<void> => {
     const existingFiles = this.getDailyNotes(date);
     if (!existingFiles.length) {
       // File doesn't exist
-      tryToCreateDailyNote(
+      void tryToCreateDailyNote(
         date,
         inNewSplit,
         this.settings,
@@ -363,20 +358,20 @@ export default class CalendarView extends ItemView {
     }
 
     await this.openDailyNoteFile(existingFiles[0], inNewSplit);
-  }
+  };
 
   private getDailyNotes(date: Moment): TFile[] {
     return getDailyNotesForDate(date, get(dailyNotesByDate), get(dailyNotes));
   }
 
-  private async updateSettings(
+  private updateSettings = async (
     changeOpts: (settings: ISettings) => Partial<ISettings>
-  ): Promise<void> {
+  ): Promise<void> => {
     await this.plugin.writeOptions(changeOpts);
     if (this.calendar) {
       this.calendar.tick();
     }
-  }
+  };
 
   private refreshCustomDailyNoteIndex(file: TAbstractFile): boolean {
     if (
@@ -398,19 +393,18 @@ export default class CalendarView extends ItemView {
     return file instanceof TFile && file.extension === "md";
   }
 
-  private async openDailyNoteFile(
+  private openDailyNoteFile = async (
     existingFile: TFile,
     inNewSplit: boolean
-  ): Promise<void> {
+  ): Promise<void> => {
     const { workspace } = this.app;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mode = (this.app.vault as any).getConfig("defaultViewMode");
+    const mode = this.app.vault.getConfig("defaultViewMode") as string;
     const leaf = inNewSplit
       ? workspace.splitActiveLeaf()
       : workspace.getUnpinnedLeaf();
-    await leaf.openFile(existingFile, { active : true, mode });
+    await leaf.openFile(existingFile, { active: true, mode });
 
     activeFile.setFile(existingFile);
-  }
+  };
 }

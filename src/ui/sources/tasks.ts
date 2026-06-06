@@ -26,7 +26,7 @@ export async function getDotsForDailyNote(
   }
   const numTasks = await getNumberOfRemainingTasks(dailyNote);
 
-  const dots = [];
+  const dots: IDot[] = [];
   if (numTasks) {
     dots.push({
       className: "task",

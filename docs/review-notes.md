@@ -69,3 +69,15 @@ network egress (the only `http://` strings in the bundle are
   paths; this plugin ships only client-side compiled DOM output and renders no
   SSR, so they are not reachable. Moving to Svelte 4/5 would require replacing
   `obsidian-calendar-ui`, which is tracked as separate future work.
+
+## Code quality — type-aware lint
+
+Once the build was fixed, the review surfaced ~150 `@typescript-eslint`
+type-aware findings (`no-unsafe-*`, `require-await`, `no-floating-promises`,
+`unbound-method`) inherited from the original calendar plugin's loose typing.
+These have all been resolved: untyped Obsidian internals are now declared in
+`src/obsidian-augment.d.ts`, event handlers are bound via class-field arrow
+properties, and promises are awaited or explicitly voided. The project's own
+`.eslintrc.js` now extends `plugin:@typescript-eslint/recommended-requiring-type-checking`
+so `npm run lint` enforces the same rules going forward; it reports zero
+problems.

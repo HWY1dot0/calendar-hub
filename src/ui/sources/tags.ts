@@ -17,7 +17,7 @@ function getNoteTags(note: TFile | null): string[] {
   const { metadataCache } = window.app;
   const frontmatter = metadataCache.getFileCache(note)?.frontmatter;
 
-  const tags = [];
+  const tags: string[] = [];
 
   if (frontmatter) {
     const frontmatterTags = parseFrontMatterTags(frontmatter) || [];
@@ -49,18 +49,18 @@ function getFormattedTagAttributes(note: TFile | null): Record<string, string> {
 }
 
 export const customTagsSource: ICalendarSource = {
-  getDailyMetadata: async (date: Moment): Promise<IDayMetadata> => {
+  getDailyMetadata: (date: Moment): Promise<IDayMetadata> => {
     const file = getDailyNote(date, get(dailyNotes));
-    return {
+    return Promise.resolve({
       dataAttributes: getFormattedTagAttributes(file),
       dots: [],
-    };
+    });
   },
-  getWeeklyMetadata: async (date: Moment): Promise<IDayMetadata> => {
+  getWeeklyMetadata: (date: Moment): Promise<IDayMetadata> => {
     const file = getWeeklyNote(date, get(weeklyNotes));
-    return {
+    return Promise.resolve({
       dataAttributes: getFormattedTagAttributes(file),
       dots: [],
-    };
+    });
   },
 };

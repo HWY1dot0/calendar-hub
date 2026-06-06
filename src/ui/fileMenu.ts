@@ -7,8 +7,7 @@ export function showFileMenu(app: App, file: TFile, position: Point): void {
       .setTitle("Delete")
       .setIcon("trash")
       .onClick(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (<any>app).fileManager.promptForFileDeletion(file);
+        app.fileManager.promptForFileDeletion(file);
       })
   );
 

@@ -6,8 +6,8 @@ import { getWeekDateFromFile } from "src/io/weeklyNotes";
 
 export const classList = (obj: Record<string, boolean>): string[] => {
   return Object.entries(obj)
-    .filter(([_k, v]) => !!v)
-    .map(([k, _k]) => k);
+    .filter(([, v]) => !!v)
+    .map(([k]) => k);
 };
 
 export function clamp(
@@ -22,8 +22,8 @@ export function partition(
   arr: string[],
   predicate: (elem: string) => boolean
 ): [string[], string[]] {
-  const pass = [];
-  const fail = [];
+  const pass: string[] = [];
+  const fail: string[] = [];
 
   arr.forEach((elem) => {
     if (predicate(elem)) {
@@ -73,5 +73,5 @@ export function getWordCount(text: string): number {
     ].join("|"),
     "g"
   );
-  return (text.match(pattern) || []).length;
+  return [...text.matchAll(pattern)].length;
 }

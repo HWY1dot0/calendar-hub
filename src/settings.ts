@@ -65,9 +65,8 @@ export const defaultSettings = Object.freeze({
 });
 
 export function appHasPeriodicNotesPluginLoaded(): boolean {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const periodicNotes = (<any>window.app).plugins.getPlugin("periodic-notes");
-  return periodicNotes && periodicNotes.settings?.weekly?.enabled;
+  const periodicNotes = window.app.plugins.getPlugin("periodic-notes");
+  return !!periodicNotes?.settings?.weekly?.enabled;
 }
 
 export class CalendarSettingsTab extends PluginSettingTab {
@@ -153,7 +152,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
         });
         dropdown.setValue(this.plugin.options.weekStart);
         dropdown.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({
+          await this.plugin.writeOptions(() => ({
             weekStart: value as IWeekStartOption,
           }));
         });
@@ -167,7 +166,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
       .addToggle((toggle) => {
         toggle.setValue(this.plugin.options.shouldConfirmBeforeCreate);
         toggle.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({
+          await this.plugin.writeOptions(() => ({
             shouldConfirmBeforeCreate: value,
           }));
         });
@@ -183,7 +182,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
       .addToggle((toggle) => {
         toggle.setValue(this.plugin.options.shouldIndexDailyNotesInAllFolders);
         toggle.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({
+          await this.plugin.writeOptions(() => ({
             shouldIndexDailyNotesInAllFolders: value,
           }));
         });
@@ -200,7 +199,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
         textfield.setPlaceholder("YYYYMMDD");
         textfield.setValue(this.plugin.options.dailyNoteFilenameDateFormat);
         textfield.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({
+          await this.plugin.writeOptions(() => ({
             dailyNoteFilenameDateFormat: value,
           }));
         });
@@ -218,7 +217,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
           this.plugin.options.shouldIndexDailyNotesFromFrontmatter
         );
         toggle.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({
+          await this.plugin.writeOptions(() => ({
             shouldIndexDailyNotesFromFrontmatter: value,
           }));
         });
@@ -235,7 +234,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
         textfield.setPlaceholder("date, daily_date, calendar_date");
         textfield.setValue(this.plugin.options.dailyNoteFrontmatterDateFields);
         textfield.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({
+          await this.plugin.writeOptions(() => ({
             dailyNoteFrontmatterDateFields: value,
           }));
         });
@@ -254,7 +253,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
         );
         textarea.setValue(this.plugin.options.dailyNoteIncludedFolders);
         textarea.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({
+          await this.plugin.writeOptions(() => ({
             dailyNoteIncludedFolders: value,
           }));
         });
@@ -268,7 +267,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
       .addToggle((toggle) => {
         toggle.setValue(this.plugin.options.showWeeklyNote);
         toggle.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({ showWeeklyNote: value }));
+          await this.plugin.writeOptions(() => ({ showWeeklyNote: value }));
           this.display(); // show/hide weekly settings
         });
       });
@@ -282,7 +281,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
         textfield.setValue(this.plugin.options.weeklyNoteFormat);
         textfield.setPlaceholder(DEFAULT_WEEK_FORMAT);
         textfield.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({ weeklyNoteFormat: value }));
+          await this.plugin.writeOptions(() => ({ weeklyNoteFormat: value }));
         });
       });
   }
@@ -296,7 +295,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
       .addText((textfield) => {
         textfield.setValue(this.plugin.options.weeklyNoteTemplate);
         textfield.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({ weeklyNoteTemplate: value }));
+          await this.plugin.writeOptions(() => ({ weeklyNoteTemplate: value }));
         });
       });
   }
@@ -308,7 +307,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
       .addText((textfield) => {
         textfield.setValue(this.plugin.options.weeklyNoteFolder);
         textfield.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({ weeklyNoteFolder: value }));
+          await this.plugin.writeOptions(() => ({ weeklyNoteFolder: value }));
         });
       });
   }
@@ -322,7 +321,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
       .addToggle((toggle) => {
         toggle.setValue(this.plugin.options.shouldIndexWeeklyNotesInAllFolders);
         toggle.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({
+          await this.plugin.writeOptions(() => ({
             shouldIndexWeeklyNotesInAllFolders: value,
           }));
         });
@@ -339,7 +338,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
         textarea.setPlaceholder("Journal, Work/Weekly, Reviews");
         textarea.setValue(this.plugin.options.weeklyNoteIncludedFolders);
         textarea.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({
+          await this.plugin.writeOptions(() => ({
             weeklyNoteIncludedFolders: value,
           }));
         });
@@ -356,7 +355,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
         textfield.setPlaceholder("GGGG-[W]WW");
         textfield.setValue(this.plugin.options.weeklyNoteFilenameDateFormat);
         textfield.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({
+          await this.plugin.writeOptions(() => ({
             weeklyNoteFilenameDateFormat: value,
           }));
         });
@@ -374,7 +373,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
           this.plugin.options.shouldIndexWeeklyNotesFromFrontmatter
         );
         toggle.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({
+          await this.plugin.writeOptions(() => ({
             shouldIndexWeeklyNotesFromFrontmatter: value,
           }));
         });
@@ -391,7 +390,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
         textfield.setPlaceholder("week, weekly_date");
         textfield.setValue(this.plugin.options.weeklyNoteFrontmatterDateFields);
         textfield.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({
+          await this.plugin.writeOptions(() => ({
             weeklyNoteFrontmatterDateFields: value,
           }));
         });
@@ -415,8 +414,8 @@ export class CalendarSettingsTab extends PluginSettingTab {
         });
         dropdown.setValue(this.plugin.options.localeOverride);
         dropdown.onChange(async (value) => {
-          this.plugin.writeOptions(() => ({
-            localeOverride: value as ILocaleOverride,
+          await this.plugin.writeOptions(() => ({
+            localeOverride: value,
           }));
         });
       });

@@ -18,7 +18,7 @@ import { createConfirmationDialog } from "src/ui/modal";
  * the bundle.
  */
 export function getDayDateFromFile(file: TFile): Moment | null {
-  const format = getDailyNoteSettings().format.split("/").pop() as string;
+  const format = getDailyNoteSettings().format.split("/").pop() ?? "";
   const noteDate = window.moment(file.basename, format, true);
   return noteDate.isValid() ? noteDate : null;
 }

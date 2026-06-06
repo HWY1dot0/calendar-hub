@@ -1,5 +1,5 @@
 import moment from "moment";
-import type { TFile } from "obsidian";
+import type { App, TFile } from "obsidian";
 import {
   getDailyNote,
   getDailyNoteSettings,
@@ -42,17 +42,15 @@ function file(path: string): TFile {
 
 describe("dailyNoteIndex", () => {
   beforeEach(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).moment = moment;
+    window.moment = moment;
     frontmatterByPath = {};
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).app = {
+    window.app = {
       metadataCache: {
-        getFileCache: jest.fn((note) => ({
+        getFileCache: jest.fn((note: TFile) => ({
           frontmatter: frontmatterByPath[note.path],
         })),
       },
-    };
+    } as unknown as App;
     mockGetDailyNoteSettings.mockReturnValue({
       format: "YYYY-MM-DD",
       folder: "",
