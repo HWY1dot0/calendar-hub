@@ -1,4 +1,4 @@
-import type { DurationInputArg2, Moment } from "moment";
+import type { DurationUnit, Moment } from "../obsidian-moment";
 import { Notice, TFile, TFolder, Vault, normalizePath } from "obsidian";
 import { getDateUID } from "obsidian-daily-notes-interface";
 
@@ -240,7 +240,7 @@ export async function createWeeklyNote(date: Moment): Promise<TFile> {
             if (calc) {
               currentDate.add(
                 parseInt(timeDelta, 10),
-                unit as DurationInputArg2
+                unit as DurationUnit
               );
             }
             if (momentFormat) {

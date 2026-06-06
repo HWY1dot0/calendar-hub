@@ -1,4 +1,4 @@
-import type { Moment } from "moment";
+import type { Moment } from "../obsidian-moment";
 import { TFile, TFolder, Vault, normalizePath } from "obsidian";
 import {
   createDailyNote,

@@ -1,4 +1,4 @@
-import type { Moment } from "moment";
+import type { Moment } from "../../obsidian-moment";
 import { parseFrontMatterTags, TFile } from "obsidian";
 import type { ICalendarSource, IDayMetadata } from "obsidian-calendar-ui";
 import { getDailyNote } from "obsidian-daily-notes-interface";
