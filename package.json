@@ -19,7 +19,6 @@
     "tslib": "2.1.0"
   },
   "devDependencies": {
-    "@tsconfig/svelte": "1.0.10",
     "@types/jest": "26.0.22",
     "@types/node": "16.18.126",
     "@typescript-eslint/eslint-plugin": "5.62.0",
