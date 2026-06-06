@@ -82,7 +82,8 @@ export class CalendarSettingsTab extends PluginSettingTab {
 
     if (!appHasDailyNotesPluginLoaded()) {
       this.containerEl.createDiv("settings-banner", (banner) => {
-        banner.createEl("h3", {
+        banner.createEl("div", {
+          cls: "settings-banner-title",
           text: "Daily Notes plugin not enabled",
         });
         banner.createEl("p", {
@@ -93,9 +94,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
       });
     }
 
-    this.containerEl.createEl("h3", {
-      text: "General Settings",
-    });
+    new Setting(this.containerEl).setName("General Settings").setHeading();
     this.addWeekStartSetting();
     this.addConfirmCreateSetting();
     this.addIndexDailyNotesInAllFoldersSetting();
@@ -109,9 +108,9 @@ export class CalendarSettingsTab extends PluginSettingTab {
       this.plugin.options.showWeeklyNote &&
       !appHasPeriodicNotesPluginLoaded()
     ) {
-      this.containerEl.createEl("h3", {
-        text: "Weekly Note Settings",
-      });
+      new Setting(this.containerEl)
+        .setName("Weekly Note Settings")
+        .setHeading();
       this.containerEl.createEl("p", {
         cls: "setting-item-description",
         text:
@@ -127,9 +126,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
       this.addWeeklyNoteFrontmatterDateFieldsSetting();
     }
 
-    this.containerEl.createEl("h3", {
-      text: "Advanced Settings",
-    });
+    new Setting(this.containerEl).setName("Advanced Settings").setHeading();
     this.addLocaleOverrideSetting();
   }
 

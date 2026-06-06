@@ -1,6 +1,6 @@
 {
   "name": "calendar-hub",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Find every note created on a given day from one calendar view, no matter which folder it lives in.",
   "author": "HWY1dot0",
   "main": "main.js",
@@ -23,7 +23,6 @@
     "@types/jest": "26.0.22",
     "@typescript-eslint/eslint-plugin": "4.20.0",
     "@typescript-eslint/parser": "4.20.0",
-    "builtin-modules": "3.3.0",
     "esbuild": "0.25.5",
     "esbuild-svelte": "0.7.4",
     "eslint": "7.23.0",
