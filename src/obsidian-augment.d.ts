@@ -12,10 +12,6 @@ declare module "obsidian" {
     plugins: ObsidianPlugins;
   }
 
-  interface Vault {
-    getConfig(key: string): unknown;
-  }
-
   interface FileManager {
     promptForFileDeletion(file: TFile): void;
   }

@@ -1,7 +1,7 @@
 <svelte:options immutable />
 
 <script lang="ts">
-  import type { Moment } from "moment";
+  import type { Moment } from "../obsidian-moment";
   import type { TFile } from "obsidian";
   import {
     Calendar as CalendarBase,
@@ -64,12 +64,26 @@
 
   export let displayedMonth: Moment = today;
   export let sources: ICalendarSource[];
-  export let onHoverDay: (date: Moment, targetEl: EventTarget) => boolean;
-  export let onHoverWeek: (date: Moment, targetEl: EventTarget) => boolean;
-  export let onClickDay: (date: Moment, isMetaPressed: boolean) => boolean;
-  export let onClickWeek: (date: Moment, isMetaPressed: boolean) => boolean;
-  export let onContextMenuDay: (date: Moment, event: MouseEvent) => boolean;
-  export let onContextMenuWeek: (date: Moment, event: MouseEvent) => boolean;
+  export let onHoverDay: (
+    date: Moment,
+    targetEl: EventTarget,
+    isMetaPressed: boolean
+  ) => void;
+  export let onHoverWeek: (
+    date: Moment,
+    targetEl: EventTarget,
+    isMetaPressed: boolean
+  ) => void;
+  export let onClickDay: (
+    date: Moment,
+    isMetaPressed: boolean
+  ) => Promise<void>;
+  export let onClickWeek: (
+    date: Moment,
+    isMetaPressed: boolean
+  ) => Promise<void>;
+  export let onContextMenuDay: (date: Moment, event: MouseEvent) => void;
+  export let onContextMenuWeek: (date: Moment, event: MouseEvent) => void;
   export let onOpenDayNote: (
     file: TFile,
     inNewSplit: boolean
@@ -105,21 +119,47 @@
     clearInterval(heartbeat);
   });
 
-  function handleClickDay(date: Moment, isMetaPressed: boolean): boolean {
+  function handleClickDay(date: Moment, isMetaPressed: boolean): void {
     selectionMode = "day";
     selectedDate = date.clone();
-    return onClickDay(date, isMetaPressed);
+    void onClickDay(date, isMetaPressed);
   }
 
-  function handleClickWeek(date: Moment, isMetaPressed: boolean): boolean {
+  function handleClickWeek(date: Moment, isMetaPressed: boolean): void {
     selectionMode = "week";
     selectedWeek = date.clone();
-    return onClickWeek(date, isMetaPressed);
+    void onClickWeek(date, isMetaPressed);
+  }
+
+  function handleHoverDay(
+    date: Moment,
+    targetEl: EventTarget,
+    isMetaPressed?: boolean
+  ): void {
+    onHoverDay(date, targetEl, isMetaPressed ?? false);
+  }
+
+  function handleHoverWeek(
+    date: Moment,
+    targetEl: EventTarget,
+    isMetaPressed?: boolean
+  ): void {
+    onHoverWeek(date, targetEl, isMetaPressed ?? false);
+  }
+
+  function handleContextMenuDay(date: Moment, event: MouseEvent): boolean {
+    onContextMenuDay(date, event);
+    return true;
+  }
+
+  function handleContextMenuWeek(date: Moment, event: MouseEvent): boolean {
+    onContextMenuWeek(date, event);
+    return true;
   }
 
   function handleOpenDayNote(event: MouseEvent, file: TFile): void {
     event.preventDefault();
-    onOpenDayNote(file, event.metaKey || event.ctrlKey);
+    void onOpenDayNote(file, event.metaKey || event.ctrlKey);
   }
 
   function handleToggleScanFolders(): void {
@@ -148,7 +188,7 @@
   function handleScanFoldersKeydown(event: KeyboardEvent): void {
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
       event.preventDefault();
-      handleSaveScanFolders();
+      void handleSaveScanFolders();
     }
   }
 
@@ -175,10 +215,10 @@
 <CalendarBase
   {sources}
   {today}
-  {onHoverDay}
-  {onHoverWeek}
-  {onContextMenuDay}
-  {onContextMenuWeek}
+  onHoverDay={handleHoverDay}
+  onHoverWeek={handleHoverWeek}
+  onContextMenuDay={handleContextMenuDay}
+  onContextMenuWeek={handleContextMenuWeek}
   onClickDay={handleClickDay}
   onClickWeek={handleClickWeek}
   bind:displayedMonth

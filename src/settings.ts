@@ -40,14 +40,14 @@ const weekdays = [
   "saturday",
 ];
 
-export const defaultSettings = Object.freeze({
+export const defaultSettings: Readonly<ISettings> = Object.freeze({
   shouldConfirmBeforeCreate: true,
   shouldIndexDailyNotesInAllFolders: true,
   dailyNoteFilenameDateFormat: "",
   shouldIndexDailyNotesFromFrontmatter: false,
   dailyNoteFrontmatterDateFields: "date, daily_date, calendar_date",
   dailyNoteIncludedFolders: "",
-  weekStart: "locale" as IWeekStartOption,
+  weekStart: "locale",
 
   wordsPerDot: DEFAULT_WORDS_PER_DOT,
 

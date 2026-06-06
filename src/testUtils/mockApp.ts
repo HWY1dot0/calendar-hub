@@ -1,7 +1,7 @@
 import type { App } from "obsidian";
 
 /* eslint-disable */
-const mockApp: App = {
+const mockApp = {
   vault: {
     adapter: {
       exists: () => Promise.resolve(false),
@@ -11,6 +11,10 @@ const mockApp: App = {
       readBinary: () => Promise.resolve(null),
       write: () => Promise.resolve(),
       writeBinary: () => Promise.resolve(),
+      append: () => Promise.resolve(),
+      appendBinary: () => Promise.resolve(),
+      process: (_path, fn) => Promise.resolve(fn("")),
+      stat: () => Promise.resolve(null),
       getResourcePath: () => "",
       mkdir: () => Promise.resolve(),
       trashSystem: () => Promise.resolve(true),
@@ -81,7 +85,7 @@ const mockApp: App = {
       },
     },
   },
-};
+} as unknown as App;
 /* eslint-enable */
 
 export default mockApp;

@@ -50,7 +50,7 @@ function createDailyNotesStore() {
       } catch (err) {
         if (!hasError) {
           // Avoid error being shown multiple times
-          console.log(
+          console.warn(
             "[Calendar Hub] Failed to find daily notes folder",
             err
           );
@@ -89,7 +89,7 @@ function createWeeklyNotesStore() {
       } catch (err) {
         if (!hasError) {
           // Avoid error being shown multiple times
-          console.log(
+          console.warn(
             "[Calendar Hub] Failed to find weekly notes folder",
             err
           );

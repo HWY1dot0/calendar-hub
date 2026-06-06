@@ -116,7 +116,7 @@ export default class CalendarView extends ItemView {
         onUpdateSettings: this.updateSettings,
         sources,
       },
-    }) as CalendarComponent;
+    }) as unknown as CalendarComponent;
 
     return Promise.resolve();
   }
@@ -269,13 +269,8 @@ export default class CalendarView extends ItemView {
   };
 
   private updateActiveFile(): void {
-    const { view } = this.app.workspace.activeLeaf;
-
-    let file = null;
-    if (view instanceof FileView) {
-      file = view.file;
-    }
-    activeFile.setFile(file);
+    const view = this.app.workspace.getActiveViewOfType(FileView);
+    activeFile.setFile(view?.file ?? null);
 
     if (this.calendar) {
       this.calendar.tick();
@@ -284,23 +279,23 @@ export default class CalendarView extends ItemView {
 
   public revealActiveNote(): void {
     const { moment } = window;
-    const { activeLeaf } = this.app.workspace;
+    const view = this.app.workspace.getActiveViewOfType(FileView);
+    if (!view?.file) {
+      return;
+    }
 
-    if (activeLeaf.view instanceof FileView) {
-      // Check to see if the active note is a daily-note
-      let date = getDayDateFromFile(activeLeaf.view.file);
-      if (date) {
-        this.calendar.$set({ displayedMonth: date });
-        return;
-      }
+    // Check to see if the active note is a daily-note
+    let date = getDayDateFromFile(view.file);
+    if (date) {
+      this.calendar.$set({ displayedMonth: date });
+      return;
+    }
 
-      // Check to see if the active note is a weekly-note
-      const { format } = getWeeklyNoteSettings();
-      date = moment(activeLeaf.view.file.basename, format, true);
-      if (date.isValid()) {
-        this.calendar.$set({ displayedMonth: date });
-        return;
-      }
+    // Check to see if the active note is a weekly-note
+    const { format } = getWeeklyNoteSettings();
+    date = moment(view.file.basename, format, true);
+    if (date.isValid()) {
+      this.calendar.$set({ displayedMonth: date });
     }
   }
 
@@ -399,11 +394,8 @@ export default class CalendarView extends ItemView {
   ): Promise<void> => {
     const { workspace } = this.app;
 
-    const mode = this.app.vault.getConfig("defaultViewMode") as string;
-    const leaf = inNewSplit
-      ? workspace.splitActiveLeaf()
-      : workspace.getUnpinnedLeaf();
-    await leaf.openFile(existingFile, { active: true, mode });
+    const leaf = workspace.getLeaf(inNewSplit ? "split" : false);
+    await leaf.openFile(existingFile, { active: true });
 
     activeFile.setFile(existingFile);
   };
