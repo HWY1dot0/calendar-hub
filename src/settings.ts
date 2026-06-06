@@ -94,7 +94,6 @@ export class CalendarSettingsTab extends PluginSettingTab {
       });
     }
 
-    new Setting(this.containerEl).setName("General Settings").setHeading();
     this.addWeekStartSetting();
     this.addConfirmCreateSetting();
     this.addIndexDailyNotesInAllFoldersSetting();
@@ -108,9 +107,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
       this.plugin.options.showWeeklyNote &&
       !appHasPeriodicNotesPluginLoaded()
     ) {
-      new Setting(this.containerEl)
-        .setName("Weekly Note Settings")
-        .setHeading();
+      new Setting(this.containerEl).setName("Weekly notes").setHeading();
       this.containerEl.createEl("p", {
         cls: "setting-item-description",
         text:
@@ -126,7 +123,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
       this.addWeeklyNoteFrontmatterDateFieldsSetting();
     }
 
-    new Setting(this.containerEl).setName("Advanced Settings").setHeading();
+    new Setting(this.containerEl).setName("Advanced").setHeading();
     this.addLocaleOverrideSetting();
   }
 
