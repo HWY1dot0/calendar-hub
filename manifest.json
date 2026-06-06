@@ -2,7 +2,7 @@
   "id": "calendar-hub",
   "name": "Calendar Hub",
   "description": "Find every note created on a given day from one calendar view, no matter which folder it lives in.",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "author": "HWY1dot0",
   "authorUrl": "https://github.com/HWY1dot0",
   "fundingUrl": "https://www.buymeacoffee.com/hwy1dot0",
