@@ -73,5 +73,5 @@ export function getWordCount(text: string): number {
     ].join("|"),
     "g"
   );
-  return [...text.matchAll(pattern)].length;
+  return text.match(pattern)?.length ?? 0;
 }
