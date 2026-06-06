@@ -1,4 +1,4 @@
-import type { Moment } from "moment";
+import type { Moment } from "./obsidian-moment";
 import { getDailyNoteSettings } from "obsidian-daily-notes-interface";
 import { FileView, TAbstractFile, TFile, ItemView, WorkspaceLeaf } from "obsidian";
 import { get } from "svelte/store";

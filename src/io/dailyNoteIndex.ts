@@ -1,4 +1,4 @@
-import type { Moment } from "moment";
+import type { Moment } from "../obsidian-moment";
 import type { TFile } from "obsidian";
 import {
   DEFAULT_DAILY_NOTE_FORMAT,
