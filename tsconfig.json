@@ -1,19 +1,24 @@
 {
-  "include": ["src/**/*"],
-  "exclude": ["node_modules/*"],
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules/*"
+  ],
   "compilerOptions": {
     "moduleResolution": "node",
     "target": "es2017",
     "isolatedModules": true,
     "sourceMap": true,
-    "types": ["node", "svelte", "jest"],
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "src": ["src/*"]
+      "src": [
+        "src/*"
+      ]
     }
   }
 }
