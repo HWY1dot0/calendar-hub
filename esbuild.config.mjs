@@ -16,6 +16,12 @@ const context = await esbuild.context({
   banner: { js: banner },
   entryPoints: ["src/main.ts"],
   bundle: true,
+  // The two calendar libraries are vendored (see vendor/) so the plugin
+  // has no runtime npm dependencies; resolve their bare specifiers there.
+  alias: {
+    "obsidian-calendar-ui": "./vendor/obsidian-calendar-ui/index.js",
+    "obsidian-daily-notes-interface": "./vendor/obsidian-daily-notes-interface/index.js",
+  },
   plugins: [
     esbuildSvelte({
       compilerOptions: { css: false },

@@ -1,19 +1,30 @@
 {
-  "include": ["src/**/*"],
-  "exclude": ["node_modules/*"],
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules/*"
+  ],
   "compilerOptions": {
     "moduleResolution": "node",
     "target": "es2017",
     "isolatedModules": true,
     "sourceMap": true,
-    "types": ["node", "svelte", "jest"],
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "src": ["src/*"]
+      "src": [
+        "src/*"
+      ],
+      "obsidian-calendar-ui": [
+        "vendor/obsidian-calendar-ui/index"
+      ],
+      "obsidian-daily-notes-interface": [
+        "vendor/obsidian-daily-notes-interface/index"
+      ]
     }
   }
 }
