@@ -1,3 +1,4 @@
+/* eslint-disable */
 /*
  * Vendored from obsidian-calendar-ui@0.3.12 (index.d.ts), unmodified.
  * https://github.com/liamcain/obsidian-calendar-ui — MIT License (see LICENSE).
