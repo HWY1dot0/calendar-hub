@@ -115,6 +115,8 @@ The original project is MIT licensed. The original copyright notice remains in `
 
 Calendar Hub uses its own plugin id, `calendar-hub`, so it can be installed separately from the original Calendar plugin.
 
+Two of Liam Cain's MIT-licensed libraries are vendored unmodified (published build artifacts) under `vendor/`, each with its license and provenance header: [obsidian-calendar-ui](https://github.com/liamcain/obsidian-calendar-ui) 0.3.12 and [obsidian-daily-notes-interface](https://github.com/liamcain/obsidian-daily-notes-interface) 0.9.0. Vendoring keeps the plugin free of runtime npm dependencies.
+
 ## Development
 
 ```bash

@@ -1,3 +1,4 @@
+/* eslint-disable */
 /*
  * Vendored from obsidian-daily-notes-interface@0.9.0 (index.d.ts), unmodified.
  * https://github.com/liamcain/obsidian-daily-notes-interface — MIT License (see LICENSE).
