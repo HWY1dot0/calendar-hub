@@ -1,12 +1,17 @@
-/* eslint-disable */
 /*
- * Vendored from obsidian-calendar-ui@0.3.12 (index.d.ts), unmodified.
+ * Vendored from obsidian-calendar-ui@0.3.12 (index.d.ts).
  * https://github.com/liamcain/obsidian-calendar-ui — MIT License (see LICENSE).
+ * Modified for this repository: Moment/Locale types are derived from the
+ * 'obsidian' module (which bundles moment) instead of importing the 'moment'
+ * package, and the ILocaleOverride union avoids a redundant constituent.
  */
-import type { Locale, Moment } from "moment";
+import type { moment } from "obsidian";
 import { SvelteComponentTyped } from "svelte";
 
-export type ILocaleOverride = "system-default" | string;
+type Moment = ReturnType<(typeof moment)["default"]>;
+type Locale = ReturnType<(typeof moment)["localeData"]>;
+
+export type ILocaleOverride = "system-default" | (string & Record<never, never>);
 export type IWeekStartOption =
   | "sunday"
   | "monday"

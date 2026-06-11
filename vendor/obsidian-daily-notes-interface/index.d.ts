@@ -1,10 +1,12 @@
-/* eslint-disable */
 /*
- * Vendored from obsidian-daily-notes-interface@0.9.0 (index.d.ts), unmodified.
+ * Vendored from obsidian-daily-notes-interface@0.9.0 (index.d.ts).
  * https://github.com/liamcain/obsidian-daily-notes-interface — MIT License (see LICENSE).
+ * Modified for this repository: the Moment type is derived from the 'obsidian'
+ * module (which bundles moment) instead of importing the 'moment' package.
  */
-import type { Moment } from "moment";
-import { TFile } from "obsidian";
+import type { moment, TFile } from "obsidian";
+
+type Moment = ReturnType<(typeof moment)["default"]>;
 
 export interface IPeriodicNoteSettings {
   folder?: string;
