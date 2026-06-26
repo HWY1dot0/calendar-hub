@@ -1,8 +1,10 @@
 /* eslint-disable */
 /*
- * Vendored from obsidian-calendar-ui@0.3.12 (dist/index.mjs), unmodified.
+ * Vendored from obsidian-calendar-ui@0.3.12 (dist/index.mjs).
  * https://github.com/liamcain/obsidian-calendar-ui — MIT License (see LICENSE).
  * Vendored so the plugin has no niche runtime dependencies to install.
+ * Modified for this repository: the Today reset recomputes the current date at
+ * click time and notifies the wrapper component.
  */
 import 'obsidian';
 
@@ -2559,6 +2561,7 @@ function instance($$self, $$props, $$invalidate) {
 	let { selectedId } = $$props;
 	let { today = window.moment() } = $$props;
 	let { displayedMonth = today } = $$props;
+	let { onResetDisplayedMonth } = $$props;
 	let month;
 	let daysOfWeek;
 
@@ -2574,7 +2577,10 @@ function instance($$self, $$props, $$invalidate) {
 	}
 
 	function resetDisplayedMonth() {
-		$$invalidate(0, displayedMonth = today.clone());
+		const currentToday = window.moment();
+		$$invalidate(10, today = currentToday);
+		$$invalidate(0, displayedMonth = currentToday.clone());
+		if (is_function(onResetDisplayedMonth)) onResetDisplayedMonth(currentToday.clone());
 	}
 
 	$$self.$$set = $$props => {
@@ -2590,6 +2596,7 @@ function instance($$self, $$props, $$invalidate) {
 		if ("selectedId" in $$props) $$invalidate(9, selectedId = $$props.selectedId);
 		if ("today" in $$props) $$invalidate(10, today = $$props.today);
 		if ("displayedMonth" in $$props) $$invalidate(0, displayedMonth = $$props.displayedMonth);
+		if ("onResetDisplayedMonth" in $$props) $$invalidate(18, onResetDisplayedMonth = $$props.onResetDisplayedMonth);
 	};
 
 	$$self.$$.update = () => {
@@ -2620,7 +2627,8 @@ function instance($$self, $$props, $$invalidate) {
 		month,
 		daysOfWeek,
 		isMobile,
-		localeData
+		localeData,
+		onResetDisplayedMonth
 	];
 }
 
@@ -2642,6 +2650,7 @@ class Calendar extends SvelteComponent {
 			selectedId: 9,
 			today: 10,
 			displayedMonth: 0,
+			onResetDisplayedMonth: 18,
 			incrementDisplayedMonth: 11,
 			decrementDisplayedMonth: 12,
 			resetDisplayedMonth: 13

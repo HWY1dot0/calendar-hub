@@ -255,7 +255,7 @@ export async function createWeeklyNote(date: Moment): Promise<TFile> {
           /{{\s*(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\s*:(.*?)}}/gi,
           (_: string, dayOfWeek: string, momentFormat: string) => {
             const day = DAYS_OF_WEEK.indexOf(dayOfWeek.toLowerCase());
-            return date.weekday(day).format(momentFormat.trim());
+            return date.clone().weekday(day).format(momentFormat.trim());
           }
         )
     );

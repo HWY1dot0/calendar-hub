@@ -3,7 +3,8 @@
  * https://github.com/liamcain/obsidian-calendar-ui — MIT License (see LICENSE).
  * Modified for this repository: Moment/Locale types are derived from the
  * 'obsidian' module (which bundles moment) instead of importing the 'moment'
- * package, and the ILocaleOverride union avoids a redundant constituent.
+ * package, the ILocaleOverride union avoids a redundant constituent, and the
+ * Today reset exposes a wrapper callback.
  */
 import type { moment } from "obsidian";
 import { SvelteComponentTyped } from "svelte";
@@ -59,6 +60,7 @@ export class Calendar extends SvelteComponentTyped<{
   // Override-able local state
   today?: Moment;
   displayedMonth?: Moment;
+  onResetDisplayedMonth?: (today: Moment) => void;
 }> {}
 
 export function configureGlobalMomentLocale(

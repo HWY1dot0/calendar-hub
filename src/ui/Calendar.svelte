@@ -22,7 +22,7 @@
     weeklyNotesByDate,
   } from "./stores";
 
-  let today: Moment;
+  let today: Moment = null;
   let selectedDate: Moment = null;
   let selectedWeek: Moment = null;
   let selectionMode: "day" | "week" = "day";
@@ -35,8 +35,11 @@
   let isSavingScanFolders = false;
 
   $: today = getToday($settings);
+  $: if (!displayedMonth && today) {
+    displayedMonth = today.clone();
+  }
   $: if (!selectedDate && today) {
-    selectedDate = today;
+    selectedDate = today.clone();
   }
   $: selectedNotes =
     selectionMode === "week" && selectedWeek
@@ -62,7 +65,7 @@
     $settings.dailyNoteIncludedFolders
   );
 
-  export let displayedMonth: Moment = today;
+  export let displayedMonth: Moment = null;
   export let sources: ICalendarSource[];
   export let onHoverDay: (
     date: Moment,
@@ -129,6 +132,11 @@
     selectionMode = "week";
     selectedWeek = date.clone();
     void onClickWeek(date, isMetaPressed);
+  }
+
+  function handleResetDisplayedMonth(date: Moment): void {
+    today = date.clone();
+    displayedMonth = date.clone();
   }
 
   function handleHoverDay(
@@ -221,6 +229,7 @@
   onContextMenuWeek={handleContextMenuWeek}
   onClickDay={handleClickDay}
   onClickWeek={handleClickWeek}
+  onResetDisplayedMonth={handleResetDisplayedMonth}
   bind:displayedMonth
   localeData={today.localeData()}
   selectedId={$activeFile}
