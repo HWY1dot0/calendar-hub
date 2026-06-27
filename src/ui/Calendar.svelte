@@ -137,6 +137,22 @@
   function handleResetDisplayedMonth(date: Moment): void {
     today = date.clone();
     displayedMonth = date.clone();
+
+    // "Today" should also move the selection (and the note panel) back to
+    // today, not leave it on the last-visited day. We only *open* today's note
+    // when it already exists — clicking Today never creates a file.
+    selectionMode = "day";
+    selectedWeek = null;
+    selectedDate = date.clone();
+
+    const todaysNotes = getDailyNotesForDate(
+      date,
+      $dailyNotesByDate,
+      $dailyNotes
+    );
+    if (todaysNotes.length === 1) {
+      void onOpenDayNote(todaysNotes[0], false);
+    }
   }
 
   function handleHoverDay(
