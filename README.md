@@ -6,7 +6,7 @@ Most calendar plugins map **one note per day**. Calendar Hub doesn't: click a da
 surfaces **every note dated to that day** — by the date in its filename or frontmatter —
 wherever it lives in your vault, so you can find, open, and manage them all from a single sidebar.
 
-![Calendar Hub demo — click a day, see every note from that day across folders](./images/demo.gif)
+![Calendar Hub demo — click a day, see every note from that day across folders](https://raw.githubusercontent.com/HWY1dot0/calendar-hub/main/images/demo.gif)
 
 ## Why Calendar Hub?
 
