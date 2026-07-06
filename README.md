@@ -1,3 +1,5 @@
+**English** | [简体中文](README.zh-CN.md)
+
 # Calendar Hub
 
 > One calendar, **every** note from that day — no matter which folder it lives in.
