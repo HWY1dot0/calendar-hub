@@ -6,7 +6,7 @@ Most calendar plugins map **one note per day**. Calendar Hub doesn't: click a da
 surfaces **every note dated to that day** — by the date in its filename or frontmatter —
 wherever it lives in your vault, so you can find, open, and manage them all from a single sidebar.
 
-![Calendar Hub preview](./images/calendar-hub-preview.png)
+![Calendar Hub demo — click a day, see every note from that day across folders](./images/demo.gif)
 
 ## Why Calendar Hub?
 
@@ -123,6 +123,11 @@ Two of Liam Cain's MIT-licensed libraries are vendored unmodified (published bui
 npm install
 npm run build
 ```
+
+## More plugins by HWY1dot0
+
+- [Screenshot Selection](https://github.com/HWY1dot0/obsidian-screenshot-selection) — capture selected note content as a theme-faithful PNG.
+- [Copy for Email](https://github.com/HWY1dot0/obsidian-copy-for-email) — copy notes as rich text that survives pasting into Gmail, Outlook and Apple Mail.
 
 ## Say Thanks
 
