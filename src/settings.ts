@@ -14,6 +14,7 @@ export interface ISettings {
   dailyNoteFilenameDateFormat: string;
   shouldIndexDailyNotesFromFrontmatter: boolean;
   dailyNoteFrontmatterDateFields: string;
+  shouldIndexDailyNotesFromCreationDate: boolean;
   dailyNoteIncludedFolders: string;
 
   // Weekly Note settings
@@ -46,6 +47,7 @@ export const defaultSettings: Readonly<ISettings> = Object.freeze({
   dailyNoteFilenameDateFormat: "",
   shouldIndexDailyNotesFromFrontmatter: false,
   dailyNoteFrontmatterDateFields: "date, daily_date, calendar_date",
+  shouldIndexDailyNotesFromCreationDate: false,
   dailyNoteIncludedFolders: "",
   weekStart: "locale",
 
@@ -101,6 +103,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
     this.addDailyNoteFilenameDateFormatSetting();
     this.addIndexDailyNotesFromFrontmatterSetting();
     this.addDailyNoteFrontmatterDateFieldsSetting();
+    this.addIndexDailyNotesFromCreationDateSetting();
     this.addShowWeeklyNoteSetting();
 
     if (
@@ -230,6 +233,24 @@ export class CalendarSettingsTab extends PluginSettingTab {
         textfield.onChange(async (value) => {
           await this.plugin.writeOptions(() => ({
             dailyNoteFrontmatterDateFields: value,
+          }));
+        });
+      });
+  }
+
+  addIndexDailyNotesFromCreationDateSetting(): void {
+    new Setting(this.containerEl)
+      .setName("Use file creation date fallback")
+      .setDesc(
+        "When neither the file name nor frontmatter yields a date, map the note to the day the file was created. Creation times are set by your device and can change when files are copied or re-synced, so file name and frontmatter dates always take priority."
+      )
+      .addToggle((toggle) => {
+        toggle.setValue(
+          this.plugin.options.shouldIndexDailyNotesFromCreationDate
+        );
+        toggle.onChange(async (value) => {
+          await this.plugin.writeOptions(() => ({
+            shouldIndexDailyNotesFromCreationDate: value,
           }));
         });
       });

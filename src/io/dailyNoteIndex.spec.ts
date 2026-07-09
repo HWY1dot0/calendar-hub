@@ -30,14 +30,15 @@ const mockGetDailyNoteSettings = getDailyNoteSettings as jest.MockedFunction<
 const mockGetDateUID = getDateUID as jest.MockedFunction<typeof getDateUID>;
 let frontmatterByPath: Record<string, Record<string, unknown>>;
 
-function file(path: string): TFile {
+function file(path: string, ctime?: number): TFile {
   const parts = path.split("/");
   const name = parts[parts.length - 1];
   return {
     basename: name.replace(/\.md$/, ""),
     name,
     path,
-  } as TFile;
+    stat: ctime ? { ctime } : undefined,
+  } as unknown as TFile;
 }
 
 describe("dailyNoteIndex", () => {
@@ -161,6 +162,45 @@ describe("dailyNoteIndex", () => {
 
     expect(notesByDate).toEqual({
       "2024-12-31": [planningNote],
+    });
+  });
+
+  it("falls back to the file creation date when enabled", () => {
+    const createdAt = moment("2024-12-31 12:00", "YYYY-MM-DD HH:mm").valueOf();
+    const undatedNote = file("Ideas/spark.md", createdAt);
+
+    const notesByDate = buildDailyNotesByDate([undatedNote], {
+      useCreationDateFallback: true,
+    });
+
+    expect(notesByDate).toEqual({
+      "2024-12-31": [undatedNote],
+    });
+  });
+
+  it("ignores creation dates unless the fallback is enabled", () => {
+    const createdAt = moment("2024-12-31 12:00", "YYYY-MM-DD HH:mm").valueOf();
+    const undatedNote = file("Ideas/spark.md", createdAt);
+
+    expect(buildDailyNotesByDate([undatedNote])).toEqual({});
+  });
+
+  it("prefers file name and frontmatter dates over the creation date", () => {
+    const createdAt = moment("2024-12-31 12:00", "YYYY-MM-DD HH:mm").valueOf();
+    const filenameNote = file("Journal/2025-01-01.md", createdAt);
+    const frontmatterNote = file("Research/market recap.md", createdAt);
+    frontmatterByPath[frontmatterNote.path] = {
+      date: "2025-01-02",
+    };
+
+    const notesByDate = buildDailyNotesByDate([filenameNote, frontmatterNote], {
+      frontmatterDateFields: "date",
+      useCreationDateFallback: true,
+    });
+
+    expect(notesByDate).toEqual({
+      "2025-01-01": [filenameNote],
+      "2025-01-02": [frontmatterNote],
     });
   });
 

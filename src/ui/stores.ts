@@ -38,6 +38,8 @@ function createDailyNotesStore() {
                   .shouldIndexDailyNotesFromFrontmatter
                   ? get(settings).dailyNoteFrontmatterDateFields
                   : "",
+                useCreationDateFallback: get(settings)
+                  .shouldIndexDailyNotesFromCreationDate,
                 includedFolders: get(settings).dailyNoteIncludedFolders,
               }
             )
