@@ -13,6 +13,7 @@ export type DailyNotesByDateMap = Record<string, TFile>;
 export interface DailyNoteIndexOptions {
   filenameDateFormat?: string;
   frontmatterDateFields?: string;
+  useCreationDateFallback?: boolean;
   includedFolders?: string;
 }
 
@@ -23,6 +24,7 @@ export interface BuildNotesByDateOptions {
   granularity: NoteGranularity;
   filenameDateFormat?: string;
   frontmatterDateFields?: string;
+  useCreationDateFallback?: boolean;
   includedFolders?: string;
 }
 
@@ -52,13 +54,16 @@ export function buildNotesByDate(
       format,
       options.filenameDateFormat
     );
-    const noteDate = date.isValid()
+    let noteDate = date.isValid()
       ? date
       : getDateFromFrontmatter(
           file,
           frontmatterDateFields,
           getExtractionFormats(format, options.filenameDateFormat ?? "")
         );
+    if (!noteDate.isValid() && options.useCreationDateFallback) {
+      noteDate = getDateFromCreationTime(file);
+    }
     if (!noteDate.isValid()) {
       return;
     }
@@ -87,6 +92,7 @@ export function buildDailyNotesByDate(
     granularity: "day",
     filenameDateFormat: indexOptions.filenameDateFormat,
     frontmatterDateFields: indexOptions.frontmatterDateFields,
+    useCreationDateFallback: indexOptions.useCreationDateFallback,
     includedFolders: indexOptions.includedFolders,
   });
 }
@@ -222,6 +228,16 @@ function getFrontmatterValue(
     }
     return (value as Record<string, unknown>)[key];
   }, frontmatter);
+}
+
+/**
+ * Last-resort date source: the file's creation time, bucketed to the local
+ * day. Creation times are device-set and can change when a file is copied or
+ * re-synced, so declared dates (file name, frontmatter) always win.
+ */
+function getDateFromCreationTime(file: TFile): Moment {
+  const ctime = file.stat?.ctime;
+  return ctime ? window.moment(ctime) : window.moment.invalid();
 }
 
 function getIncludedFolders(includedFolders: string): string[] {
