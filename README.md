@@ -47,6 +47,7 @@ once you are happy.
 - Open and manage the day's notes from one panel.
 - Scan the whole vault or limit matching to specific folders.
 - Adjust folder filters directly from the calendar sidebar.
+- Browse every indexed note in a List panel grouped by year, quarter, month, or week — newest or oldest first, honoring the same folder filter.
 - Match exact Daily Notes filenames and dates embedded inside longer filenames.
 - Add extra filename date formats such as `YYYYMMDD`, or datetime formats such as `YYYYMMDDTHHmmssZZ`.
 - Prefer frontmatter date fields over filename dates, so a note can be re-dated without renaming the file.
@@ -79,6 +80,8 @@ Datetime formats work too: `YYYYMMDDTHHmmssZZ` matches timestamps like `20260709
 - **Note count dots**: Solid dots show how many matching notes exist for the day, up to 5 dots.
 - **Confirm before creating new note**: Ask before creating a new Daily Note.
 - **Show week number**: Show week numbers and keep legacy weekly-note behavior.
+
+Below the calendar, the List panel groups every indexed note by Year, Year › Quarter, Year › Month, or Year › Week with a newest/oldest sort toggle. Today's branch starts expanded, group headers show note counts, and clicking a note opens it. The folder filter applies to the list as well.
 
 The folder filter can also be adjusted directly from the calendar sidebar: the Scan folders panel shows the vault's folders as a collapsible tree with checkboxes. Selecting a folder covers its whole subtree, and unchecking a covered subfolder writes an exclusion — "everything under 30 Macro except Archive" is two clicks. A dash marks branches whose subtree mixes included and excluded folders; clicking it selects the whole branch cleanly. Branches with configured folders start expanded, and the text box remains available for manual edits.
 

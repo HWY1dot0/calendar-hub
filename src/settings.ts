@@ -3,6 +3,7 @@ import { appHasDailyNotesPluginLoaded } from "obsidian-daily-notes-interface";
 import type { ILocaleOverride, IWeekStartOption } from "obsidian-calendar-ui";
 
 import { DEFAULT_WEEK_FORMAT, DEFAULT_WORDS_PER_DOT } from "src/constants";
+import type { ListGrouping, ListSortOrder } from "src/ui/listViewModel";
 
 import type CalendarPlugin from "./main";
 
@@ -16,6 +17,11 @@ export interface ISettings {
   dailyNoteFrontmatterDateFields: string;
   shouldIndexDailyNotesFromCreationDate: boolean;
   dailyNoteIncludedFolders: string;
+
+  // Sidebar list panel
+  showListPanel: boolean;
+  listGrouping: ListGrouping;
+  listSortOrder: ListSortOrder;
 
   // Weekly Note settings
   showWeeklyNote: boolean;
@@ -49,6 +55,9 @@ export const defaultSettings: Readonly<ISettings> = Object.freeze({
   dailyNoteFrontmatterDateFields: "date, daily_date, calendar_date",
   shouldIndexDailyNotesFromCreationDate: false,
   dailyNoteIncludedFolders: "",
+  showListPanel: false,
+  listGrouping: "month" as ListGrouping,
+  listSortOrder: "desc" as ListSortOrder,
   weekStart: "locale",
 
   wordsPerDot: DEFAULT_WORDS_PER_DOT,
