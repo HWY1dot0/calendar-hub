@@ -242,10 +242,20 @@
   margin-bottom: 6px;
 }
 
-.calendar-hub-list-panel {
+.calendar-hub-view-content {
   display: flex;
   flex-direction: column;
-  height: 100%;
+}
+
+.calendar-hub-nav {
+  flex-shrink: 0;
+}
+
+.calendar-hub-list-panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .calendar-hub-list-panel .calendar-list-tree {

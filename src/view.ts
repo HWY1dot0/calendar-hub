@@ -111,6 +111,7 @@ export default class CalendarView extends ItemView {
   }
 
   onOpen(): Promise<void> {
+    this.contentEl.addClass("calendar-hub-view-content");
     this.modeAction = this.addAction(
       "list",
       "Switch to list view",
@@ -155,6 +156,23 @@ export default class CalendarView extends ItemView {
   private renderMode(mode: SidebarViewMode): void {
     this.destroyModeComponents();
     this.contentEl.empty();
+
+    // Sidebars hide the view header (and its actions), so the flip control
+    // also lives in an in-content nav bar, file-explorer style.
+    const navButton = this.contentEl
+      .createDiv("nav-header calendar-hub-nav")
+      .createDiv("nav-buttons-container")
+      .createDiv({
+        cls: "clickable-icon nav-action-button",
+        attr: {
+          "aria-label":
+            mode === "calendar"
+              ? "Switch to list view"
+              : "Switch to calendar view",
+        },
+      });
+    setIcon(navButton, mode === "calendar" ? "list" : "calendar");
+    navButton.addEventListener("click", this.toggleMode);
 
     if (mode === "list") {
       this.listPanel = new ListPanel({
