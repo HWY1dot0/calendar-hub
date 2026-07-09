@@ -14,18 +14,12 @@
   import { getDailyNotesForDate } from "src/io/dailyNoteIndex";
   import type { FolderRule } from "src/io/folderRules";
   import {
-    getFolderCheckState,
     parseFolderRules,
     serializeFolderRules,
     toggleFolderRule,
   } from "src/io/folderRules";
-  import type { FolderNode } from "src/io/folderTree";
-  import {
-    flattenFolderTree,
-    getExpansionForSelection,
-  } from "src/io/folderTree";
-  import { getVaultFolderTree } from "src/io/vaultFolders";
   import { getWeeklyNotesForDate } from "src/io/weeklyNotes";
+  import FolderRuleTree from "./FolderRuleTree.svelte";
   import type {
     ListGrouping,
     ListSortOrder,
@@ -52,9 +46,9 @@
   let scanFoldersValue = "";
   let scanFoldersSummary = "";
   let isSavingScanFolders = false;
-  let folderTree: FolderNode[] = [];
-  let expandedFolders: Set<string> = new Set();
   let scanFolderRules: FolderRule[] = [];
+  let isListFilterOpen = false;
+  let listFilterRules: FolderRule[] = [];
   let expandedListGroups: Set<string> | null = null;
   let listModel: ListYearGroup[] = [];
   let listTotalNotes = 0;
@@ -90,12 +84,17 @@
     $settings.dailyNoteIncludedFolders
   );
   $: scanFolderRules = parseFolderRules(scanFoldersValue);
-  $: visibleFolderRows = flattenFolderTree(folderTree, expandedFolders);
+  $: listFilterRules = parseFolderRules($settings.listFolderFilter);
+  $: listFilterSummary = getScanFoldersSummary(
+    $settings.listFolderFilter,
+    "All notes"
+  );
   $: listModel = $settings.showListPanel
     ? buildListModel(
         $dailyNotesByDate,
         $settings.listGrouping,
-        $settings.listSortOrder
+        $settings.listSortOrder,
+        listFilterRules
       )
     : [];
   $: listTotalNotes = listModel.reduce(
@@ -231,23 +230,7 @@
     isScanFoldersOpen = !isScanFoldersOpen;
     if (isScanFoldersOpen) {
       scanFoldersValue = $settings.dailyNoteIncludedFolders;
-      folderTree = getVaultFolderTree();
-      expandedFolders = getExpansionForSelection(
-        parseFolderRules($settings.dailyNoteIncludedFolders).map(
-          (rule) => rule.path
-        )
-      );
     }
-  }
-
-  function handleToggleFolderExpansion(folder: string): void {
-    const next = new Set(expandedFolders);
-    if (next.has(folder)) {
-      next.delete(folder);
-    } else {
-      next.add(folder);
-    }
-    expandedFolders = next;
   }
 
   function handleToggleFolderSelection(folder: string): void {
@@ -312,15 +295,27 @@
     expandedListGroups = next;
   }
 
-  function getScanFoldersSummary(value: string): string {
+  function handleToggleListFilterFolder(folder: string): void {
+    void onUpdateSettings(() => ({
+      listFolderFilter: serializeFolderRules(
+        toggleFolderRule(folder, listFilterRules)
+      ),
+    }));
+  }
+
+  function handleClearListFilter(): void {
+    void onUpdateSettings(() => ({ listFolderFilter: "" }));
+  }
+
+  function getScanFoldersSummary(value: string, baseLabel = "All vault"): string {
     const rules = parseFolderRules(value);
     const includes = rules.filter((rule) => !rule.excluded).length;
     const excludes = rules.length - includes;
     if (!includes && !excludes) {
-      return "All vault";
+      return baseLabel;
     }
     if (!includes) {
-      return `All vault − ${excludes}`;
+      return `${baseLabel} − ${excludes}`;
     }
     const base = `${includes} folder${includes === 1 ? "" : "s"}`;
     return excludes ? `${base} − ${excludes}` : base;
@@ -414,6 +409,34 @@
         </select>
       </div>
 
+      <button
+        class="calendar-filter-toggle calendar-list-filter-toggle"
+        type="button"
+        aria-expanded={isListFilterOpen}
+        on:click={() => (isListFilterOpen = !isListFilterOpen)}
+      >
+        <span>Filter folders</span>
+        <span class="calendar-filter-summary">{listFilterSummary}</span>
+      </button>
+      {#if isListFilterOpen}
+        <div class="calendar-list-filter-body">
+          <FolderRuleTree
+            rules={listFilterRules}
+            onToggleFolder={handleToggleListFilterFolder}
+          />
+          <div class="calendar-filter-actions">
+            <button
+              class="calendar-filter-action"
+              type="button"
+              disabled={!$settings.listFolderFilter}
+              on:click={handleClearListFilter}
+            >
+              All notes
+            </button>
+          </div>
+        </div>
+      {/if}
+
       {#if listModel.length}
         <div class="calendar-list-tree">
           {#each listModel as yearGroup (yearGroup.key)}
@@ -492,42 +515,10 @@
 
   {#if isScanFoldersOpen}
     <div class="calendar-filter-body">
-      {#if visibleFolderRows.length}
-        <div class="calendar-folder-list">
-          {#each visibleFolderRows as row (row.path)}
-            {@const state = getFolderCheckState(row.path, scanFolderRules)}
-            <div
-              class="calendar-folder-row"
-              style="padding-left: {row.depth * 14}px"
-            >
-              {#if row.hasChildren}
-                <button
-                  class="calendar-folder-expand"
-                  type="button"
-                  aria-expanded={row.expanded}
-                  aria-label={row.expanded
-                    ? "Collapse folder"
-                    : "Expand folder"}
-                  on:click={() => handleToggleFolderExpansion(row.path)}
-                >
-                  {row.expanded ? "▾" : "▸"}
-                </button>
-              {:else}
-                <span class="calendar-folder-expand-spacer" />
-              {/if}
-              <label class="calendar-folder-option" title={row.path}>
-                <input
-                  type="checkbox"
-                  checked={state === "checked"}
-                  indeterminate={state === "partial"}
-                  on:change={() => handleToggleFolderSelection(row.path)}
-                />
-                <span class="calendar-folder-path">{row.name}</span>
-              </label>
-            </div>
-          {/each}
-        </div>
-      {/if}
+      <FolderRuleTree
+        rules={scanFolderRules}
+        onToggleFolder={handleToggleFolderSelection}
+      />
       <textarea
         class="calendar-filter-textarea"
         rows="3"

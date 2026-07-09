@@ -81,7 +81,7 @@ Datetime formats work too: `YYYYMMDDTHHmmssZZ` matches timestamps like `20260709
 - **Confirm before creating new note**: Ask before creating a new Daily Note.
 - **Show week number**: Show week numbers and keep legacy weekly-note behavior.
 
-Below the calendar, the List panel groups every indexed note by Year, Year › Quarter, Year › Month, or Year › Week with a newest/oldest sort toggle. Today's branch starts expanded, group headers show note counts, and clicking a note opens it. The folder filter applies to the list as well.
+Below the calendar, the List panel groups every indexed note by Year, Year › Quarter, Year › Month, or Year › Week with a newest/oldest sort toggle. Today's branch starts expanded, group headers show note counts, and clicking a note opens it. The list has its own Filter folders lens — the same checkbox tree, applied instantly — so you can focus the list on one area without touching the calendar's Scan folders scope.
 
 The folder filter can also be adjusted directly from the calendar sidebar: the Scan folders panel shows the vault's folders as a collapsible tree with checkboxes. Selecting a folder covers its whole subtree, and unchecking a covered subfolder writes an exclusion — "everything under 30 Macro except Archive" is two clicks. A dash marks branches whose subtree mixes included and excluded folders; clicking it selects the whole branch cleanly. Branches with configured folders start expanded, and the text box remains available for manual edits.
 
