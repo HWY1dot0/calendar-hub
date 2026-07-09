@@ -1,13 +1,14 @@
 import type { WeekSpec } from "./obsidian-moment";
 import { App, Plugin, WorkspaceLeaf } from "obsidian";
 
-import { VIEW_TYPE_CALENDAR } from "./constants";
+import { VIEW_TYPE_CALENDAR, VIEW_TYPE_LIST } from "./constants";
 import { dailyNotes, settings, weeklyNotes } from "./ui/stores";
 import {
   appHasPeriodicNotesPluginLoaded,
   CalendarSettingsTab,
   ISettings,
 } from "./settings";
+import ListView from "./listView";
 import CalendarView from "./view";
 
 declare global {
@@ -30,6 +31,16 @@ export default class CalendarPlugin extends Plugin {
 
     this.registerView(VIEW_TYPE_CALENDAR, (leaf: WorkspaceLeaf) => {
       return new CalendarView(leaf, this);
+    });
+
+    this.registerView(VIEW_TYPE_LIST, (leaf: WorkspaceLeaf) => {
+      return new ListView(leaf, this);
+    });
+
+    this.addCommand({
+      id: "show-list-view",
+      name: "Open list view",
+      callback: () => this.initListLeaf(),
     });
 
     this.addCommand({
@@ -70,6 +81,18 @@ export default class CalendarPlugin extends Plugin {
     this.addSettingTab(new CalendarSettingsTab(this.app, this));
 
     this.app.workspace.onLayoutReady(() => this.initLeaf());
+  }
+
+  initListLeaf(): void {
+    const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_LIST);
+    if (existing.length) {
+      void this.app.workspace.revealLeaf(existing[0]);
+      return;
+    }
+    void this.app.workspace.getRightLeaf(false)?.setViewState({
+      type: VIEW_TYPE_LIST,
+      active: true,
+    });
   }
 
   initLeaf(): void {

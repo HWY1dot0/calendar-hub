@@ -32,8 +32,7 @@ export interface ISettings {
   shouldIndexDailyNotesFromCreationDate: boolean;
   dailyNoteIncludedFolders: string;
 
-  // Sidebar list panel
-  showListPanel: boolean;
+  // List view
   listGrouping: ListGrouping;
   listSortOrder: ListSortOrder;
   listFolderFilter: string;
@@ -70,7 +69,6 @@ export const defaultSettings: Readonly<ISettings> = Object.freeze({
   dailyNoteFrontmatterDateFields: "date, daily_date, calendar_date",
   shouldIndexDailyNotesFromCreationDate: false,
   dailyNoteIncludedFolders: "",
-  showListPanel: false,
   listGrouping: "month" as ListGrouping,
   listSortOrder: "desc" as ListSortOrder,
   listFolderFilter: "",
