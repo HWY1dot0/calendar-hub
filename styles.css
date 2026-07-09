@@ -184,18 +184,45 @@
   padding: 4px;
 }
 
-.calendar-folder-option {
+.calendar-folder-row {
   align-items: center;
   border-radius: 4px;
-  cursor: pointer;
   display: flex;
-  font-size: 12px;
-  gap: 6px;
-  padding: 2px 4px;
+  gap: 2px;
 }
 
-.calendar-folder-option:hover {
+.calendar-folder-row:hover {
   background: var(--background-modifier-hover);
+}
+
+.calendar-folder-expand {
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 10px;
+  height: 18px;
+  line-height: 18px;
+  padding: 0;
+  width: 16px;
+}
+
+.calendar-folder-expand-spacer {
+  flex-shrink: 0;
+  width: 16px;
+}
+
+.calendar-folder-option {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  font-size: 12px;
+  gap: 6px;
+  min-width: 0;
+  padding: 2px 4px 2px 0;
 }
 
 .calendar-folder-option input[type="checkbox"] {

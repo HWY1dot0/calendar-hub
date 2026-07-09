@@ -12,7 +12,12 @@
 
   import type { ISettings } from "src/settings";
   import { getDailyNotesForDate } from "src/io/dailyNoteIndex";
-  import { getVaultFolderPaths } from "src/io/vaultFolders";
+  import type { FolderNode } from "src/io/folderTree";
+  import {
+    flattenFolderTree,
+    getExpansionForSelection,
+  } from "src/io/folderTree";
+  import { getVaultFolderTree } from "src/io/vaultFolders";
   import { getWeeklyNotesForDate } from "src/io/weeklyNotes";
   import {
     activeFile,
@@ -34,7 +39,8 @@
   let scanFoldersValue = "";
   let scanFoldersSummary = "";
   let isSavingScanFolders = false;
-  let vaultFolders: string[] = [];
+  let folderTree: FolderNode[] = [];
+  let expandedFolders: Set<string> = new Set();
   let selectedScanFolders: Set<string> = new Set();
 
   $: today = getToday($settings);
@@ -68,6 +74,7 @@
     $settings.dailyNoteIncludedFolders
   );
   $: selectedScanFolders = new Set(getListValues(scanFoldersValue));
+  $: visibleFolderRows = flattenFolderTree(folderTree, expandedFolders);
 
   export let displayedMonth: Moment = null;
   export let sources: ICalendarSource[];
@@ -194,8 +201,21 @@
     isScanFoldersOpen = !isScanFoldersOpen;
     if (isScanFoldersOpen) {
       scanFoldersValue = $settings.dailyNoteIncludedFolders;
-      vaultFolders = getVaultFolderPaths();
+      folderTree = getVaultFolderTree();
+      expandedFolders = getExpansionForSelection(
+        getListValues($settings.dailyNoteIncludedFolders)
+      );
     }
+  }
+
+  function handleToggleFolderExpansion(folder: string): void {
+    const next = new Set(expandedFolders);
+    if (next.has(folder)) {
+      next.delete(folder);
+    } else {
+      next.add(folder);
+    }
+    expandedFolders = next;
   }
 
   function handleToggleFolderSelection(folder: string): void {
@@ -309,17 +329,37 @@
 
   {#if isScanFoldersOpen}
     <div class="calendar-filter-body">
-      {#if vaultFolders.length}
+      {#if visibleFolderRows.length}
         <div class="calendar-folder-list">
-          {#each vaultFolders as folder (folder)}
-            <label class="calendar-folder-option">
-              <input
-                type="checkbox"
-                checked={selectedScanFolders.has(folder)}
-                on:change={() => handleToggleFolderSelection(folder)}
-              />
-              <span class="calendar-folder-path" title={folder}>{folder}</span>
-            </label>
+          {#each visibleFolderRows as row (row.path)}
+            <div
+              class="calendar-folder-row"
+              style="padding-left: {row.depth * 14}px"
+            >
+              {#if row.hasChildren}
+                <button
+                  class="calendar-folder-expand"
+                  type="button"
+                  aria-expanded={row.expanded}
+                  aria-label={row.expanded
+                    ? "Collapse folder"
+                    : "Expand folder"}
+                  on:click={() => handleToggleFolderExpansion(row.path)}
+                >
+                  {row.expanded ? "▾" : "▸"}
+                </button>
+              {:else}
+                <span class="calendar-folder-expand-spacer" />
+              {/if}
+              <label class="calendar-folder-option" title={row.path}>
+                <input
+                  type="checkbox"
+                  checked={selectedScanFolders.has(row.path)}
+                  on:change={() => handleToggleFolderSelection(row.path)}
+                />
+                <span class="calendar-folder-path">{row.name}</span>
+              </label>
+            </div>
           {/each}
         </div>
       {/if}
