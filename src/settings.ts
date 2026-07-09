@@ -1,4 +1,18 @@
-import { App, PluginSettingTab, Setting, TextComponent } from "obsidian";
+import {
+  App,
+  PluginSettingTab,
+  Setting,
+  TextAreaComponent,
+  TextComponent,
+} from "obsidian";
+
+import type { FolderRule } from "src/io/folderRules";
+import {
+  parseFolderRules,
+  serializeFolderRules,
+  toggleFolderRule,
+} from "src/io/folderRules";
+import FolderRuleTree from "src/ui/FolderRuleTree.svelte";
 import { appHasDailyNotesPluginLoaded } from "obsidian-daily-notes-interface";
 import type { ILocaleOverride, IWeekStartOption } from "obsidian-calendar-ui";
 
@@ -82,15 +96,31 @@ export function appHasPeriodicNotesPluginLoaded(): boolean {
   return !!periodicNotes?.settings?.weekly?.enabled;
 }
 
+interface FolderRuleTreeComponent {
+  $set(props: { rules: FolderRule[] }): void;
+  $destroy(): void;
+}
+
 export class CalendarSettingsTab extends PluginSettingTab {
   private plugin: CalendarPlugin;
+  private folderTreeComponent: FolderRuleTreeComponent | null = null;
 
   constructor(app: App, plugin: CalendarPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
 
+  hide(): void {
+    this.destroyFolderTree();
+  }
+
+  private destroyFolderTree(): void {
+    this.folderTreeComponent?.$destroy();
+    this.folderTreeComponent = null;
+  }
+
   display(): void {
+    this.destroyFolderTree();
     this.containerEl.empty();
 
     if (!appHasDailyNotesPluginLoaded()) {
@@ -310,12 +340,15 @@ export class CalendarSettingsTab extends PluginSettingTab {
   }
 
   addDailyNoteIncludedFoldersSetting(): void {
+    let foldersField: TextAreaComponent | null = null;
+
     new Setting(this.containerEl)
       .setName("Folders to scan for daily notes")
       .setDesc(
-        "Optional. Leave blank to scan the whole vault. Add comma-separated folder paths to limit filename and frontmatter matching. Prefix a path with '-' to exclude its subtree, e.g. '30 Macro, -30 Macro/Archive'; deeper rules win."
+        "Optional. Leave blank to scan the whole vault. Tick folders in the tree below or add comma-separated folder paths to limit filename and frontmatter matching. Prefix a path with '-' to exclude its subtree, e.g. '30 Macro, -30 Macro/Archive'; deeper rules win."
       )
       .addTextArea((textarea) => {
+        foldersField = textarea;
         textarea.setPlaceholder(
           "Journal, Work/Daily, Projects/Research"
         );
@@ -324,8 +357,31 @@ export class CalendarSettingsTab extends PluginSettingTab {
           await this.plugin.writeOptions(() => ({
             dailyNoteIncludedFolders: value,
           }));
+          this.folderTreeComponent?.$set({
+            rules: parseFolderRules(value),
+          });
         });
       });
+
+    const treeEl = this.containerEl.createDiv("calendar-settings-folder-tree");
+    this.folderTreeComponent = new FolderRuleTree({
+      target: treeEl,
+      props: {
+        rules: parseFolderRules(this.plugin.options.dailyNoteIncludedFolders),
+        onToggleFolder: (folder: string) => {
+          const next = toggleFolderRule(
+            folder,
+            parseFolderRules(this.plugin.options.dailyNoteIncludedFolders)
+          );
+          const value = serializeFolderRules(next);
+          void this.plugin.writeOptions(() => ({
+            dailyNoteIncludedFolders: value,
+          }));
+          this.folderTreeComponent?.$set({ rules: next });
+          foldersField?.setValue(value);
+        },
+      },
+    }) as unknown as FolderRuleTreeComponent;
   }
 
   addShowWeeklyNoteSetting(): void {

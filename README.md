@@ -46,7 +46,7 @@ once you are happy.
 - See all notes dated to any selected day (by filename or frontmatter), regardless of folder.
 - Open and manage the day's notes from one panel.
 - Scan the whole vault or limit matching to specific folders.
-- Adjust folder filters directly from the calendar sidebar.
+- Configure the scan scope with a checkbox folder tree in Settings; focus the List panel with its own filter lens.
 - Browse every indexed note in a List panel grouped by year, quarter, month, or week — newest or oldest first, honoring the same folder filter.
 - Match exact Daily Notes filenames and dates embedded inside longer filenames.
 - Add extra filename date formats such as `YYYYMMDD`, or datetime formats such as `YYYYMMDDTHHmmssZZ`.
@@ -83,7 +83,7 @@ Datetime formats work too: `YYYYMMDDTHHmmssZZ` matches timestamps like `20260709
 
 Below the calendar, the List panel groups every indexed note by Year, Year › Quarter, Year › Month, or Year › Week with a newest/oldest sort toggle. Today's branch starts expanded, group headers show note counts, and clicking a note opens it. The list has its own Filter folders lens — the same checkbox tree, applied instantly — so you can focus the list on one area without touching the calendar's Scan folders scope.
 
-The folder filter can also be adjusted directly from the calendar sidebar: the Scan folders panel shows the vault's folders as a collapsible tree with checkboxes. Selecting a folder covers its whole subtree, and unchecking a covered subfolder writes an exclusion — "everything under 30 Macro except Archive" is two clicks. A dash marks branches whose subtree mixes included and excluded folders; clicking it selects the whole branch cleanly. Branches with configured folders start expanded, and the text box remains available for manual edits.
+The scan scope is configured in Settings: below the text field, the same collapsible checkbox tree covers a folder's whole subtree when selected, unchecking a covered subfolder writes an exclusion — "everything under 30 Macro except Archive" is two clicks — and a dash marks branches mixing included and excluded folders (click it to select the branch cleanly). The sidebar carries no global scope switch: day-to-day focusing lives in the List panel's own Filter folders lens, so the calendar's scope stays put.
 
 ## Installation
 
