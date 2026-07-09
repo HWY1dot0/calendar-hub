@@ -42,11 +42,6 @@
   let selectedNotes: TFile[] = [];
   let panelLabel = "";
   let hasSelection = false;
-  let isScanFoldersOpen = false;
-  let scanFoldersValue = "";
-  let scanFoldersSummary = "";
-  let isSavingScanFolders = false;
-  let scanFolderRules: FolderRule[] = [];
   let isListFilterOpen = false;
   let listFilterRules: FolderRule[] = [];
   let expandedListGroups: Set<string> | null = null;
@@ -74,16 +69,6 @@
       : selectedDate
       ? selectedDate.format("LL")
       : "";
-  $: if (
-    !isScanFoldersOpen &&
-    scanFoldersValue !== $settings.dailyNoteIncludedFolders
-  ) {
-    scanFoldersValue = $settings.dailyNoteIncludedFolders;
-  }
-  $: scanFoldersSummary = getScanFoldersSummary(
-    $settings.dailyNoteIncludedFolders
-  );
-  $: scanFolderRules = parseFolderRules(scanFoldersValue);
   $: listFilterRules = parseFolderRules($settings.listFolderFilter);
   $: listFilterSummary = getScanFoldersSummary(
     $settings.listFolderFilter,
@@ -224,42 +209,6 @@
   function handleOpenDayNote(event: MouseEvent, file: TFile): void {
     event.preventDefault();
     void onOpenDayNote(file, event.metaKey || event.ctrlKey);
-  }
-
-  function handleToggleScanFolders(): void {
-    isScanFoldersOpen = !isScanFoldersOpen;
-    if (isScanFoldersOpen) {
-      scanFoldersValue = $settings.dailyNoteIncludedFolders;
-    }
-  }
-
-  function handleToggleFolderSelection(folder: string): void {
-    scanFoldersValue = serializeFolderRules(
-      toggleFolderRule(folder, scanFolderRules)
-    );
-  }
-
-  async function handleSaveScanFolders(): Promise<void> {
-    isSavingScanFolders = true;
-    try {
-      await onUpdateSettings(() => ({
-        dailyNoteIncludedFolders: scanFoldersValue,
-      }));
-    } finally {
-      isSavingScanFolders = false;
-    }
-  }
-
-  async function handleClearScanFolders(): Promise<void> {
-    scanFoldersValue = "";
-    await handleSaveScanFolders();
-  }
-
-  function handleScanFoldersKeydown(event: KeyboardEvent): void {
-    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-      event.preventDefault();
-      void handleSaveScanFolders();
-    }
   }
 
   function getTodayListExpansion(grouping: ListGrouping): Set<string> {
@@ -502,50 +451,3 @@
   {/if}
 </section>
 
-<section class="calendar-filter-panel">
-  <button
-    class="calendar-filter-toggle"
-    type="button"
-    aria-expanded={isScanFoldersOpen}
-    on:click={handleToggleScanFolders}
-  >
-    <span>Scan folders</span>
-    <span class="calendar-filter-summary">{scanFoldersSummary}</span>
-  </button>
-
-  {#if isScanFoldersOpen}
-    <div class="calendar-filter-body">
-      <FolderRuleTree
-        rules={scanFolderRules}
-        onToggleFolder={handleToggleFolderSelection}
-      />
-      <textarea
-        class="calendar-filter-textarea"
-        rows="3"
-        bind:value={scanFoldersValue}
-        on:keydown={handleScanFoldersKeydown}
-        placeholder="Journal, Work/Daily, Projects/Research"
-      />
-      <div class="calendar-filter-actions">
-        <button
-          class="calendar-filter-action"
-          type="button"
-          disabled={isSavingScanFolders ||
-            scanFoldersValue === $settings.dailyNoteIncludedFolders}
-          on:click={handleSaveScanFolders}
-        >
-          Apply
-        </button>
-        <button
-          class="calendar-filter-action"
-          type="button"
-          disabled={isSavingScanFolders ||
-            !$settings.dailyNoteIncludedFolders}
-          on:click={handleClearScanFolders}
-        >
-          All vault
-        </button>
-      </div>
-    </div>
-  {/if}
-</section>

@@ -246,6 +246,14 @@
   margin-bottom: 6px;
 }
 
+.calendar-settings-folder-tree {
+  margin: 0 0 18px;
+}
+
+.calendar-settings-folder-tree .calendar-folder-list {
+  max-width: 480px;
+}
+
 .calendar-list-filter-body {
   margin-bottom: 6px;
 }
