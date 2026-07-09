@@ -172,6 +172,43 @@
   color: var(--text-faint);
 }
 
+.calendar-folder-list {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.calendar-folder-option {
+  align-items: center;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  font-size: 12px;
+  gap: 6px;
+  padding: 2px 4px;
+}
+
+.calendar-folder-option:hover {
+  background: var(--background-modifier-hover);
+}
+
+.calendar-folder-option input[type="checkbox"] {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.calendar-folder-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .calendar-filter-actions {
   display: flex;
   gap: 6px;

@@ -80,7 +80,7 @@ Datetime formats work too: `YYYYMMDDTHHmmssZZ` matches timestamps like `20260709
 - **Confirm before creating new note**: Ask before creating a new Daily Note.
 - **Show week number**: Show week numbers and keep legacy weekly-note behavior.
 
-The folder filter can also be adjusted directly from the calendar sidebar.
+The folder filter can also be adjusted directly from the calendar sidebar: the Scan folders panel lists every vault folder with a checkbox, and the text box remains available for manual edits.
 
 ## Installation
 
