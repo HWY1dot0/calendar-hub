@@ -247,8 +247,22 @@
   flex-direction: column;
 }
 
-.calendar-hub-nav {
+.calendar-hub-mode-toggle {
+  background: var(--interactive-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  box-shadow: none;
+  color: var(--text-normal);
+  cursor: pointer;
   flex-shrink: 0;
+  font: inherit;
+  font-size: 12px;
+  margin: 4px 8px 6px;
+  padding: 4px 8px;
+}
+
+.calendar-hub-mode-toggle:hover {
+  background: var(--interactive-hover);
 }
 
 .calendar-hub-list-panel {
