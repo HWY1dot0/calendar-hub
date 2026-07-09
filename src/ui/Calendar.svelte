@@ -26,6 +26,12 @@
   } from "src/io/folderTree";
   import { getVaultFolderTree } from "src/io/vaultFolders";
   import { getWeeklyNotesForDate } from "src/io/weeklyNotes";
+  import type {
+    ListGrouping,
+    ListSortOrder,
+    ListYearGroup,
+  } from "./listViewModel";
+  import { buildListModel, getListKeysForDate } from "./listViewModel";
   import {
     activeFile,
     dailyNotes,
@@ -49,6 +55,9 @@
   let folderTree: FolderNode[] = [];
   let expandedFolders: Set<string> = new Set();
   let scanFolderRules: FolderRule[] = [];
+  let expandedListGroups: Set<string> | null = null;
+  let listModel: ListYearGroup[] = [];
+  let listTotalNotes = 0;
 
   $: today = getToday($settings);
   $: if (!displayedMonth && today) {
@@ -82,6 +91,20 @@
   );
   $: scanFolderRules = parseFolderRules(scanFoldersValue);
   $: visibleFolderRows = flattenFolderTree(folderTree, expandedFolders);
+  $: listModel = $settings.showListPanel
+    ? buildListModel(
+        $dailyNotesByDate,
+        $settings.listGrouping,
+        $settings.listSortOrder
+      )
+    : [];
+  $: listTotalNotes = listModel.reduce(
+    (count, year) => count + year.noteCount,
+    0
+  );
+  $: if ($settings.showListPanel && expandedListGroups === null && today) {
+    expandedListGroups = getTodayListExpansion($settings.listGrouping);
+  }
 
   export let displayedMonth: Moment = null;
   export let sources: ICalendarSource[];
@@ -256,6 +279,39 @@
     }
   }
 
+  function getTodayListExpansion(grouping: ListGrouping): Set<string> {
+    const keys = getListKeysForDate(window.moment(), grouping);
+    return new Set([keys.yearKey, keys.subgroupKey]);
+  }
+
+  function handleToggleListPanel(): void {
+    const opening = !$settings.showListPanel;
+    void onUpdateSettings(() => ({ showListPanel: opening }));
+  }
+
+  function handleChangeListGrouping(event: Event): void {
+    const value = (event.currentTarget as HTMLSelectElement)
+      .value as ListGrouping;
+    expandedListGroups = getTodayListExpansion(value);
+    void onUpdateSettings(() => ({ listGrouping: value }));
+  }
+
+  function handleChangeListSort(event: Event): void {
+    const value = (event.currentTarget as HTMLSelectElement)
+      .value as ListSortOrder;
+    void onUpdateSettings(() => ({ listSortOrder: value }));
+  }
+
+  function handleToggleListGroup(key: string): void {
+    const next = new Set(expandedListGroups ?? []);
+    if (next.has(key)) {
+      next.delete(key);
+    } else {
+      next.add(key);
+    }
+    expandedListGroups = next;
+  }
+
   function getScanFoldersSummary(value: string): string {
     const rules = parseFolderRules(value);
     const includes = rules.filter((rule) => !rule.excluded).length;
@@ -321,6 +377,107 @@
     {/if}
   </section>
 {/if}
+
+<section class="calendar-filter-panel">
+  <button
+    class="calendar-filter-toggle"
+    type="button"
+    aria-expanded={$settings.showListPanel}
+    on:click={handleToggleListPanel}
+  >
+    <span>List</span>
+    <span class="calendar-filter-summary">
+      {$settings.showListPanel ? formatNoteCount(listTotalNotes) : ""}
+    </span>
+  </button>
+
+  {#if $settings.showListPanel}
+    <div class="calendar-filter-body">
+      <div class="calendar-list-controls">
+        <select
+          class="dropdown calendar-list-select"
+          value={$settings.listGrouping}
+          on:change={handleChangeListGrouping}
+        >
+          <option value="year">Year</option>
+          <option value="quarter">Year › Quarter</option>
+          <option value="month">Year › Month</option>
+          <option value="week">Year › Week</option>
+        </select>
+        <select
+          class="dropdown calendar-list-select"
+          value={$settings.listSortOrder}
+          on:change={handleChangeListSort}
+        >
+          <option value="desc">Newest first</option>
+          <option value="asc">Oldest first</option>
+        </select>
+      </div>
+
+      {#if listModel.length}
+        <div class="calendar-list-tree">
+          {#each listModel as yearGroup (yearGroup.key)}
+            <button
+              class="calendar-list-group"
+              type="button"
+              aria-expanded={expandedListGroups?.has(yearGroup.key) ?? false}
+              on:click={() => handleToggleListGroup(yearGroup.key)}
+            >
+              <span class="calendar-list-caret">
+                {expandedListGroups?.has(yearGroup.key) ? "▾" : "▸"}
+              </span>
+              <span class="calendar-list-label">{yearGroup.label}</span>
+              <span class="calendar-list-count">{yearGroup.noteCount}</span>
+            </button>
+            {#if expandedListGroups?.has(yearGroup.key)}
+              {#each yearGroup.subgroups as subgroup (subgroup.key)}
+                {#if subgroup.label !== null}
+                  <button
+                    class="calendar-list-group calendar-list-subgroup"
+                    type="button"
+                    aria-expanded={expandedListGroups?.has(subgroup.key) ??
+                      false}
+                    on:click={() => handleToggleListGroup(subgroup.key)}
+                  >
+                    <span class="calendar-list-caret">
+                      {expandedListGroups?.has(subgroup.key) ? "▾" : "▸"}
+                    </span>
+                    <span class="calendar-list-label">{subgroup.label}</span>
+                    <span class="calendar-list-count">
+                      {subgroup.noteCount}
+                    </span>
+                  </button>
+                {/if}
+                {#if subgroup.label === null || expandedListGroups?.has(subgroup.key)}
+                  <div
+                    class="calendar-list-days"
+                    class:calendar-list-days-nested={subgroup.label !== null}
+                  >
+                    {#each subgroup.days as day (day.dateStr)}
+                      <div class="calendar-list-day">{day.label}</div>
+                      {#each day.files as note (note.path)}
+                        <button
+                          class="calendar-list-note"
+                          type="button"
+                          title={note.path}
+                          on:click={(event) => handleOpenDayNote(event, note)}
+                        >
+                          {note.basename}
+                        </button>
+                      {/each}
+                    {/each}
+                  </div>
+                {/if}
+              {/each}
+            {/if}
+          {/each}
+        </div>
+      {:else}
+        <div class="calendar-note-empty">No dated notes</div>
+      {/if}
+    </div>
+  {/if}
+</section>
 
 <section class="calendar-filter-panel">
   <button
