@@ -205,9 +205,9 @@ export class CalendarSettingsTab extends PluginSettingTab {
 
   addIndexDailyNotesFromFrontmatterSetting(): void {
     new Setting(this.containerEl)
-      .setName("Use frontmatter date fallback")
+      .setName("Use frontmatter dates")
       .setDesc(
-        "When a file name does not contain a matching date, read the configured frontmatter fields and map the note to that date."
+        "Read the configured frontmatter fields for a date and prefer it over any date in the file name. Notes without a frontmatter date fall back to file name matching."
       )
       .addToggle((toggle) => {
         toggle.setValue(
@@ -225,7 +225,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName("Frontmatter date fields")
       .setDesc(
-        "Comma-separated field names to read when frontmatter fallback is enabled. Nested fields can use dot notation, such as calendar.date."
+        "Comma-separated field names to read when frontmatter dates are enabled. Nested fields can use dot notation, such as calendar.date."
       )
       .addText((textfield) => {
         textfield.setPlaceholder("date, daily_date, calendar_date");
@@ -379,9 +379,9 @@ export class CalendarSettingsTab extends PluginSettingTab {
 
   addIndexWeeklyNotesFromFrontmatterSetting(): void {
     new Setting(this.containerEl)
-      .setName("Use frontmatter fallback for weekly notes")
+      .setName("Use frontmatter dates for weekly notes")
       .setDesc(
-        "When a file name does not contain a matching week, read the configured frontmatter fields and map the note to that week (a week string or a date both work)."
+        "Read the configured frontmatter fields for a week and prefer them over the file name (a week string or a date both work). Notes without a frontmatter value fall back to file name matching."
       )
       .addToggle((toggle) => {
         toggle.setValue(
@@ -399,7 +399,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName("Weekly frontmatter fields")
       .setDesc(
-        "Comma-separated field names to read when weekly frontmatter fallback is enabled. Nested fields can use dot notation, such as calendar.week."
+        "Comma-separated field names to read when weekly frontmatter dates are enabled. Nested fields can use dot notation, such as calendar.week."
       )
       .addText((textfield) => {
         textfield.setPlaceholder("week, weekly_date");

@@ -117,7 +117,7 @@ describe("dailyNoteIndex", () => {
     });
   });
 
-  it("uses frontmatter as a fallback when the file name has no date", () => {
+  it("maps notes by their frontmatter date fields", () => {
     const marketNote = file("Research/market update.md");
     frontmatterByPath[marketNote.path] = {
       date: "2024-12-31",
@@ -132,7 +132,7 @@ describe("dailyNoteIndex", () => {
     });
   });
 
-  it("keeps the file name date when frontmatter disagrees", () => {
+  it("prefers the frontmatter date when the file name disagrees", () => {
     const trackerNote = file("Projects/Tracker 20250101.md");
     frontmatterByPath[trackerNote.path] = {
       date: "2024-12-31",
@@ -144,7 +144,7 @@ describe("dailyNoteIndex", () => {
     });
 
     expect(notesByDate).toEqual({
-      "2025-01-01": [trackerNote],
+      "2024-12-31": [trackerNote],
     });
   });
 
