@@ -74,7 +74,7 @@ Datetime formats work too: `YYYYMMDDTHHmmssZZ` matches timestamps like `20260709
 - **Folders to scan for daily notes**: Limit matching to comma-separated folder paths. Leave blank to scan the whole vault.
 - **Date format inside daily note filenames**: Add extra comma-separated formats, such as `YYYYMMDD` or `YYYYMMDDTHHmmssZZ`.
 - **Use frontmatter dates**: Read configured frontmatter fields first; the filename is used when no frontmatter date matches.
-- **Frontmatter date fields**: Choose fields such as `date`, `daily_date`, or `calendar.date`.
+- **Frontmatter date fields**: Choose fields such as `date`, `daily_date`, or `calendar.date`. When a note has several date fields, they are tried in the order you list them and the first valid date wins — put the field you trust most first.
 - **Use file creation date fallback**: Map notes without any declared date to the day the file was created on disk.
 - **Note count dots**: Solid dots show how many matching notes exist for the day, up to 5 dots.
 - **Confirm before creating new note**: Ask before creating a new Daily Note.

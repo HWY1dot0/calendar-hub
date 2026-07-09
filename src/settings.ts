@@ -225,7 +225,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName("Frontmatter date fields")
       .setDesc(
-        "Comma-separated field names to read when frontmatter dates are enabled. Nested fields can use dot notation, such as calendar.date."
+        "Comma-separated field names to read when frontmatter dates are enabled. Fields are tried in this order and the first one with a valid date wins, so put the field you trust most first. Nested fields can use dot notation, such as calendar.date."
       )
       .addText((textfield) => {
         textfield.setPlaceholder("date, daily_date, calendar_date");
@@ -399,7 +399,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName("Weekly frontmatter fields")
       .setDesc(
-        "Comma-separated field names to read when weekly frontmatter dates are enabled. Nested fields can use dot notation, such as calendar.week."
+        "Comma-separated field names to read when weekly frontmatter dates are enabled. Fields are tried in this order and the first one with a valid value wins. Nested fields can use dot notation, such as calendar.week."
       )
       .addText((textfield) => {
         textfield.setPlaceholder("week, weekly_date");
