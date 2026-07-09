@@ -242,6 +242,24 @@
   margin-bottom: 6px;
 }
 
+.calendar-hub-list-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.calendar-hub-list-panel .calendar-list-tree {
+  flex: 1;
+  max-height: none;
+}
+
+.calendar-list-total {
+  align-self: center;
+  color: var(--text-faint);
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
 .calendar-list-filter-toggle {
   margin-bottom: 6px;
 }

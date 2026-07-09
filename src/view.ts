@@ -116,7 +116,6 @@ export default class CalendarView extends ItemView {
         onContextMenuDay: this.onContextMenuDay,
         onContextMenuWeek: this.onContextMenuWeek,
         onOpenDayNote: this.openDailyNoteFile,
-        onUpdateSettings: this.updateSettings,
         sources,
       },
     }) as unknown as CalendarComponent;
@@ -380,15 +379,6 @@ export default class CalendarView extends ItemView {
   private getDailyNotes(date: Moment): TFile[] {
     return getDailyNotesForDate(date, get(dailyNotesByDate), get(dailyNotes));
   }
-
-  private updateSettings = async (
-    changeOpts: (settings: ISettings) => Partial<ISettings>
-  ): Promise<void> => {
-    await this.plugin.writeOptions(changeOpts);
-    if (this.calendar) {
-      this.calendar.tick();
-    }
-  };
 
   private refreshCustomDailyNoteIndex(file: TAbstractFile): boolean {
     if (

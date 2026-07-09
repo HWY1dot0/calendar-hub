@@ -47,7 +47,7 @@ once you are happy.
 - Open and manage the day's notes from one panel.
 - Scan the whole vault or limit matching to specific folders.
 - Configure the scan scope with a checkbox folder tree in Settings; focus the List panel with its own filter lens.
-- Browse every indexed note in a List panel grouped by year, quarter, month, or week — newest or oldest first, honoring the same folder filter.
+- Browse every indexed note in a dedicated List view — grouped by year, quarter, month, or week, newest or oldest first, with its own folder filter — placed anywhere Obsidian allows, including a full-height workspace tab.
 - Match exact Daily Notes filenames and dates embedded inside longer filenames.
 - Add extra filename date formats such as `YYYYMMDD`, or datetime formats such as `YYYYMMDDTHHmmssZZ`.
 - Prefer frontmatter date fields over filename dates, so a note can be re-dated without renaming the file.
@@ -81,7 +81,7 @@ Datetime formats work too: `YYYYMMDDTHHmmssZZ` matches timestamps like `20260709
 - **Confirm before creating new note**: Ask before creating a new Daily Note.
 - **Show week number**: Show week numbers and keep legacy weekly-note behavior.
 
-Below the calendar, the List panel groups every indexed note by Year, Year › Quarter, Year › Month, or Year › Week with a newest/oldest sort toggle. Today's branch starts expanded, group headers show note counts, and clicking a note opens it. The list has its own Filter folders lens — the same checkbox tree, applied instantly — so you can focus the list on one area without touching the calendar's Scan folders scope.
+The List view is its own panel: run the "Open list view" command to open it (right sidebar by default) and drag its tab anywhere — including the main workspace for full-height browsing. It groups every indexed note by Year, Year › Quarter, Year › Month, or Year › Week with a newest/oldest sort toggle; today's branch starts expanded, group headers show note counts, and clicking a note opens it. The list has its own Filter folders lens — the same checkbox tree, applied instantly — so you can focus it on one area without touching the calendar's scan scope.
 
 The scan scope is configured in Settings: below the text field, the same collapsible checkbox tree covers a folder's whole subtree when selected, unchecking a covered subfolder writes an exclusion — "everything under 30 Macro except Archive" is two clicks — and a dash marks branches mixing included and excluded folders (click it to select the branch cleanly). The sidebar carries no global scope switch: day-to-day focusing lives in the List panel's own Filter folders lens, so the calendar's scope stays put.
 
