@@ -242,6 +242,14 @@
   margin-bottom: 6px;
 }
 
+.calendar-list-filter-toggle {
+  margin-bottom: 6px;
+}
+
+.calendar-list-filter-body {
+  margin-bottom: 6px;
+}
+
 .calendar-list-select {
   flex: 1;
   font-size: 12px;

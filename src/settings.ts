@@ -22,6 +22,7 @@ export interface ISettings {
   showListPanel: boolean;
   listGrouping: ListGrouping;
   listSortOrder: ListSortOrder;
+  listFolderFilter: string;
 
   // Weekly Note settings
   showWeeklyNote: boolean;
@@ -58,6 +59,7 @@ export const defaultSettings: Readonly<ISettings> = Object.freeze({
   showListPanel: false,
   listGrouping: "month" as ListGrouping,
   listSortOrder: "desc" as ListSortOrder,
+  listFolderFilter: "",
   weekStart: "locale",
 
   wordsPerDot: DEFAULT_WORDS_PER_DOT,

@@ -1,5 +1,7 @@
 import type { TFile } from "obsidian";
 
+import type { FolderRule } from "../io/folderRules";
+import { shouldIncludeFilePath } from "../io/folderRules";
 import type { Moment } from "../obsidian-moment";
 
 export type ListGrouping = "year" | "quarter" | "month" | "week";
@@ -79,13 +81,15 @@ export function getListKeysForDate(
 
 /**
  * Shapes the daily-notes index into a year › subgroup › day tree for the
- * sidebar list. The index is already folder-filtered, so the list honors the
- * same scan-folder rules as the calendar.
+ * sidebar list. The index is already scoped by the scan-folder rules;
+ * `filterRules` is the list's own lens, narrowing further within that scope
+ * without touching the calendar.
  */
 export function buildListModel(
   notesByDate: Record<string, TFile[]>,
   grouping: ListGrouping,
-  order: ListSortOrder
+  order: ListSortOrder,
+  filterRules: FolderRule[] = []
 ): ListYearGroup[] {
   const years = new Map<
     string,
@@ -93,7 +97,11 @@ export function buildListModel(
   >();
 
   for (const [uid, files] of Object.entries(notesByDate)) {
-    if (!files?.length) {
+    const scoped =
+      filterRules.length && files?.length
+        ? files.filter((file) => shouldIncludeFilePath(file.path, filterRules))
+        : files;
+    if (!scoped?.length) {
       continue;
     }
     const date = parseDayUID(uid);
@@ -121,7 +129,7 @@ export function buildListModel(
       label: date.format("MMM D, ddd"),
       files: [],
     };
-    day.files = [...day.files, ...files];
+    day.files = [...day.files, ...scoped];
     bucket.days.set(dateStr, day);
   }
 

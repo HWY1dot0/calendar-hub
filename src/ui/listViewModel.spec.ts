@@ -1,6 +1,7 @@
 import moment from "moment";
 import type { TFile } from "obsidian";
 
+import { parseFolderRules } from "../io/folderRules";
 import { buildListModel, getListKeysForDate } from "./listViewModel";
 
 function file(path: string): TFile {
@@ -108,6 +109,27 @@ describe("listViewModel", () => {
 
     expect(model).toHaveLength(1);
     expect(model[0].subgroups[0].days[0].dateStr).toBe("2026-07-09");
+  });
+
+  it("narrows to its own folder lens and drops emptied groups", () => {
+    const macroNote = file("30 Macro/Fed/2026-07-09 fomc.md");
+    const logNote = file("40 Logs/2026-07-09.md");
+    const juneLogNote = file("40 Logs/2026-06-01.md");
+
+    const model = buildListModel(
+      {
+        "2026-07-09": [macroNote, logNote],
+        "2026-06-01": [juneLogNote],
+      },
+      "month",
+      "desc",
+      parseFolderRules("30 Macro")
+    );
+
+    expect(model).toHaveLength(1);
+    expect(model[0].noteCount).toBe(1);
+    expect(model[0].subgroups.map((sub) => sub.key)).toEqual(["2026-07"]);
+    expect(model[0].subgroups[0].days[0].files).toEqual([macroNote]);
   });
 
   it("derives expansion keys that match the model keys", () => {
