@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, PluginSettingTab, Setting, TextComponent } from "obsidian";
 import { appHasDailyNotesPluginLoaded } from "obsidian-daily-notes-interface";
 import type { ILocaleOverride, IWeekStartOption } from "obsidian-calendar-ui";
 
@@ -98,19 +98,24 @@ export class CalendarSettingsTab extends PluginSettingTab {
 
     this.addWeekStartSetting();
     this.addConfirmCreateSetting();
+
+    // Ordered like the matching pipeline: master switch, folder scope, then
+    // the date sources in precedence order (frontmatter > filename > ctime).
+    new Setting(this.containerEl).setName("Date matching").setHeading();
     this.addIndexDailyNotesInAllFoldersSetting();
     this.addDailyNoteIncludedFoldersSetting();
-    this.addDailyNoteFilenameDateFormatSetting();
     this.addIndexDailyNotesFromFrontmatterSetting();
     this.addDailyNoteFrontmatterDateFieldsSetting();
+    this.addDailyNoteFilenameDateFormatSetting();
     this.addIndexDailyNotesFromCreationDateSetting();
+
+    new Setting(this.containerEl).setName("Weekly notes").setHeading();
     this.addShowWeeklyNoteSetting();
 
     if (
       this.plugin.options.showWeeklyNote &&
       !appHasPeriodicNotesPluginLoaded()
     ) {
-      new Setting(this.containerEl).setName("Weekly notes").setHeading();
       this.containerEl.createEl("p", {
         cls: "setting-item-description",
         text:
@@ -187,12 +192,47 @@ export class CalendarSettingsTab extends PluginSettingTab {
   }
 
   addDailyNoteFilenameDateFormatSetting(): void {
+    const presetFormats = [
+      "YYYYMMDD",
+      "YYYY-MM-DD",
+      "YYYY_MM_DD",
+      "YYYY.MM.DD",
+      "DD-MM-YYYY",
+      "MM-DD-YYYY",
+      "YYYYMMDDTHHmmss",
+      "YYYYMMDDTHHmmssZZ",
+    ];
+    let formatField: TextComponent | null = null;
+
     new Setting(this.containerEl)
       .setName("Date format inside daily note filenames")
       .setDesc(
-        "Optional. Calendar Hub already looks for the Daily Notes date format anywhere in the file name. Add extra comma-separated formats here, such as YYYYMMDD for files like 'meeting 20260529.md', or YYYYMMDDTHHmmssZZ for timestamps like 'sync 20260529T143025Z.md'."
+        "Optional. Calendar Hub already looks for the Daily Notes date format anywhere in the file name. Pick common formats from the dropdown (each pick appends to the list) or type your own comma-separated moment.js formats, such as YYYYMMDD for files like 'meeting 20260529.md', or YYYYMMDDTHHmmssZZ for timestamps like 'sync 20260529T143025Z.md'."
       )
+      .addDropdown((dropdown) => {
+        dropdown.addOption("", "Add a common format…");
+        presetFormats.forEach((format) => dropdown.addOption(format, format));
+        dropdown.setValue("");
+        dropdown.onChange((value) => {
+          if (!value) {
+            return;
+          }
+          const current = this.plugin.options.dailyNoteFilenameDateFormat
+            .split(/[,\n]/)
+            .map((entry) => entry.trim())
+            .filter(Boolean);
+          if (!current.includes(value)) {
+            const next = [...current, value].join(", ");
+            void this.plugin.writeOptions(() => ({
+              dailyNoteFilenameDateFormat: next,
+            }));
+            formatField?.setValue(next);
+          }
+          dropdown.setValue("");
+        });
+      })
       .addText((textfield) => {
+        formatField = textfield;
         textfield.setPlaceholder("YYYYMMDD");
         textfield.setValue(this.plugin.options.dailyNoteFilenameDateFormat);
         textfield.onChange(async (value) => {
