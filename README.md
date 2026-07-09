@@ -48,7 +48,7 @@ once you are happy.
 - Scan the whole vault or limit matching to specific folders.
 - Adjust folder filters directly from the calendar sidebar.
 - Match exact Daily Notes filenames and dates embedded inside longer filenames.
-- Add extra filename date formats such as `YYYYMMDD`.
+- Add extra filename date formats such as `YYYYMMDD`, or datetime formats such as `YYYYMMDDTHHmmssZZ`.
 - Use frontmatter date fields as a fallback when the filename has no date.
 - Use note-count dots to see how many matching notes exist on each day.
 - Keep optional weekly-note support for existing Calendar workflows.
@@ -64,11 +64,13 @@ Calendar Hub maps Markdown files to calendar dates in this order:
 
 Filename dates take priority over frontmatter dates. Folder filters apply to both filename and frontmatter matching.
 
+Datetime formats work too: `YYYYMMDDTHHmmssZZ` matches timestamps like `20260709T143025Z` or `20260709T143025+0800`. A timestamp with a UTC offset is mapped to the calendar day written in the name, not converted to your local timezone.
+
 ## Settings
 
 - **Detect daily notes in all folders**: Scan Markdown files outside the configured Daily Notes folder.
 - **Folders to scan for daily notes**: Limit matching to comma-separated folder paths. Leave blank to scan the whole vault.
-- **Date format inside daily note filenames**: Add extra comma-separated formats, such as `YYYYMMDD`.
+- **Date format inside daily note filenames**: Add extra comma-separated formats, such as `YYYYMMDD` or `YYYYMMDDTHHmmssZZ`.
 - **Use frontmatter date fallback**: Read configured frontmatter fields when the filename has no matching date.
 - **Frontmatter date fields**: Choose fields such as `date`, `daily_date`, or `calendar.date`.
 - **Note count dots**: Solid dots show how many matching notes exist for the day, up to 5 dots.

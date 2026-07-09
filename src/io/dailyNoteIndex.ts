@@ -105,7 +105,7 @@ export function getDateFromFilename(
   dailyNoteFormat: string,
   filenameDateFormat = ""
 ): Moment {
-  const exactDate = window.moment(basename, dailyNoteFormat, true);
+  const exactDate = parseNoteDate(basename, dailyNoteFormat);
   if (exactDate.isValid()) {
     return exactDate;
   }
@@ -118,7 +118,7 @@ export function getDateFromFilename(
     for (const length of candidateLengths) {
       for (let start = 0; start <= basename.length - length; start++) {
         const candidate = basename.substring(start, start + length);
-        const embeddedDate = window.moment(candidate, extractionFormat, true);
+        const embeddedDate = parseNoteDate(candidate, extractionFormat);
         if (embeddedDate.isValid()) {
           return embeddedDate;
         }
@@ -192,13 +192,13 @@ function getDateFromFrontmatterValue(value: unknown, formats: string[]): Moment 
 
   const valueText = String(value).trim();
   for (const format of getFrontmatterFormats(formats)) {
-    const date = window.moment(valueText, format, true);
+    const date = parseNoteDate(valueText, format);
     if (date.isValid()) {
       return date;
     }
   }
 
-  const isoDate = window.moment(valueText, window.moment.ISO_8601, true);
+  const isoDate = parseNoteDate(valueText, window.moment.ISO_8601);
   return isoDate.isValid() ? isoDate : window.moment.invalid();
 }
 
@@ -250,15 +250,72 @@ function shouldIndexFile(file: TFile, includedFolders: string[]): boolean {
   });
 }
 
+type MomentFormat = Parameters<typeof window.moment>[1];
+
+/**
+ * Strict-parses a date string. When the text carries an explicit UTC offset
+ * (literal "Z", "+0800", …), the note buckets to the calendar day written in
+ * the text (moment.parseZone semantics) instead of that instant converted to
+ * the machine timezone, and the result is re-anchored as a plain local moment
+ * so date UIDs stay comparable with the calendar's own dates.
+ */
+function parseNoteDate(text: string, format: MomentFormat): Moment {
+  const parsed = window.moment(text, format, true);
+  if (!parsed.isValid() || !hasExplicitUtcOffset(text, format)) {
+    return parsed;
+  }
+
+  const literal = window.moment.parseZone(text, format, true);
+  return window.moment({
+    year: literal.year(),
+    month: literal.month(),
+    date: literal.date(),
+  });
+}
+
+/**
+ * parseZone misreads offset-less strings ("2024-12-31" sniffs "-12" as an
+ * offset), so it is only safe once an explicit offset is guaranteed: either
+ * the format declares an unescaped Z/ZZ token that strict parsing consumed,
+ * or an ISO value ends with a full offset.
+ */
+function hasExplicitUtcOffset(text: string, format: MomentFormat): boolean {
+  if (typeof format === "string") {
+    return /Z/.test(removeEscapedCharacters(format));
+  }
+  return /(Z|[+-]\d{2}:\d{2}|[+-]\d{4})$/.test(text);
+}
+
+function removeEscapedCharacters(format: string): string {
+  return format.replace(/\[[^\]]*\]/g, "");
+}
+
 function getCandidateLengths(format: string): number[] {
   const sampleDates = [
     window.moment("2000-01-02", "YYYY-MM-DD"),
     window.moment("2000-11-22", "YYYY-MM-DD"),
   ];
 
-  return Array.from(
-    new Set(sampleDates.map((date) => date.format(format).length))
-  ).sort((a, b) => b - a);
+  // Sample dates render the Z/ZZ offset tokens numerically ("+08:00" /
+  // "+0800"), but strict parsing also accepts a literal "Z" for UTC, which
+  // is 5 (Z) or 4 (ZZ) characters shorter. Offer those window lengths too so
+  // filenames like "20260709T143025Z" are still tried.
+  const offsetTokens = removeEscapedCharacters(format).match(/ZZ|Z/g) ?? [];
+  let literalUtcShrink = 0;
+  for (const token of offsetTokens) {
+    literalUtcShrink += token === "ZZ" ? 4 : 5;
+  }
+
+  const lengths = new Set<number>();
+  sampleDates.forEach((date) => {
+    const length = date.format(format).length;
+    lengths.add(length);
+    if (literalUtcShrink > 0) {
+      lengths.add(length - literalUtcShrink);
+    }
+  });
+
+  return Array.from(lengths).sort((a, b) => b - a);
 }
 
 export function dailyNotesByDateToSingleNotes(
