@@ -148,6 +148,42 @@ describe("dailyNoteIndex", () => {
     });
   });
 
+  it("resolves multiple frontmatter date fields by their configured order", () => {
+    const digestNote = file("Research/talk digest.md");
+    frontmatterByPath[digestNote.path] = {
+      date: "2026-07-09",
+      talk_date: "2026-07-08",
+    };
+
+    expect(
+      buildDailyNotesByDate([digestNote], {
+        frontmatterDateFields: "date, talk_date",
+      })
+    ).toEqual({ "2026-07-09": [digestNote] });
+
+    expect(
+      buildDailyNotesByDate([digestNote], {
+        frontmatterDateFields: "talk_date, date",
+      })
+    ).toEqual({ "2026-07-08": [digestNote] });
+  });
+
+  it("skips configured frontmatter fields without a valid date", () => {
+    const draftNote = file("Research/draft.md");
+    frontmatterByPath[draftNote.path] = {
+      status: "TBD",
+      date: "2026-07-09",
+    };
+
+    const notesByDate = buildDailyNotesByDate([draftNote], {
+      frontmatterDateFields: "status, date",
+    });
+
+    expect(notesByDate).toEqual({
+      "2026-07-09": [draftNote],
+    });
+  });
+
   it("supports configured nested frontmatter fields and date arrays", () => {
     const planningNote = file("Projects/planning.md");
     frontmatterByPath[planningNote.path] = {
