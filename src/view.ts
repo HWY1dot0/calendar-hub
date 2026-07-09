@@ -96,6 +96,10 @@ export default class CalendarView extends ItemView {
   }
 
   onOpen(): Promise<void> {
+    this.addAction("list", "Open list view", () => {
+      this.plugin.initListLeaf();
+    });
+
     // Integration point: external plugins can listen for
     // `calendar-hub:open` to feed in additional sources.
     const sources = [

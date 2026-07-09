@@ -1,6 +1,6 @@
 import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
 
-import { VIEW_TYPE_LIST } from "./constants";
+import { VIEW_TYPE_CALENDAR, VIEW_TYPE_LIST } from "./constants";
 import type CalendarPlugin from "./main";
 import type { ISettings } from "./settings";
 import ListPanel from "./ui/ListPanel.svelte";
@@ -32,6 +32,15 @@ export default class ListView extends ItemView {
   }
 
   onOpen(): Promise<void> {
+    this.addAction("calendar", "Open calendar view", () => {
+      const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_CALENDAR);
+      if (leaves.length) {
+        void this.app.workspace.revealLeaf(leaves[0]);
+        return;
+      }
+      this.plugin.initLeaf();
+    });
+
     // Fresh snapshot even when the calendar view is closed; live updates
     // ride on the calendar view's vault event wiring.
     dailyNotes.reindex();
