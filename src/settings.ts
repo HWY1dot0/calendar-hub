@@ -211,7 +211,9 @@ export class CalendarSettingsTab extends PluginSettingTab {
       )
       .addDropdown((dropdown) => {
         dropdown.addOption("", "Add a common format…");
-        presetFormats.forEach((format) => dropdown.addOption(format, format));
+        presetFormats.forEach((format) => {
+          dropdown.addOption(format, format);
+        });
         dropdown.setValue("");
         dropdown.onChange((value) => {
           if (!value) {
