@@ -187,7 +187,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName("Date format inside daily note filenames")
       .setDesc(
-        "Optional. Calendar Hub already looks for the Daily Notes date format anywhere in the file name. Add extra comma-separated formats here, such as YYYYMMDD for files like 'meeting 20260529.md'."
+        "Optional. Calendar Hub already looks for the Daily Notes date format anywhere in the file name. Add extra comma-separated formats here, such as YYYYMMDD for files like 'meeting 20260529.md', or YYYYMMDDTHHmmssZZ for timestamps like 'sync 20260529T143025Z.md'."
       )
       .addText((textfield) => {
         textfield.setPlaceholder("YYYYMMDD");

@@ -184,6 +184,47 @@ describe("dailyNoteIndex", () => {
     });
   });
 
+  it("matches offset datetime formats spelled with a literal Z", () => {
+    const utcNote = file("Alpha/20260709T143025Z.md");
+    const numericOffsetNote = file("Beta/20260709T143025+0800.md");
+    const embeddedNote = file("Gamma/sync 20260709T143025Z report.md");
+
+    const notesByDate = buildDailyNotesByDate(
+      [utcNote, numericOffsetNote, embeddedNote],
+      "YYYYMMDDTHHmmssZZ"
+    );
+
+    expect(notesByDate).toEqual({
+      "2026-07-09": [utcNote, numericOffsetNote, embeddedNote],
+    });
+  });
+
+  it("buckets offset datetimes by the date written in the filename", () => {
+    const date = getDateFromFilename(
+      "20260709T233025-0500",
+      "YYYY-MM-DD",
+      "YYYYMMDDTHHmmssZZ"
+    );
+
+    expect(date.format("YYYY-MM-DD")).toBe("2026-07-09");
+    expect(date.isLocal()).toBe(true);
+  });
+
+  it("buckets offset frontmatter dates by the written date", () => {
+    const overnightNote = file("Research/overnight sync.md");
+    frontmatterByPath[overnightNote.path] = {
+      date: "2026-07-09T23:30:25-05:00",
+    };
+
+    const notesByDate = buildDailyNotesByDate([overnightNote], {
+      frontmatterDateFields: "date",
+    });
+
+    expect(notesByDate).toEqual({
+      "2026-07-09": [overnightNote],
+    });
+  });
+
   it("matches the whole basename before trying an embedded date", () => {
     const date = getDateFromFilename(
       "2024-12-31",
