@@ -35,7 +35,7 @@ Calendar was missing:
 |---|---|---|
 | Notes per day | One configured Daily Note | **Every matching note, in any folder** |
 | Folder scope | Daily Notes folder only | **Whole vault, or just the folders you pick** |
-| Date detection | Daily Notes filename | Filename + **extra formats** + **frontmatter fallback** |
+| Date detection | Daily Notes filename | **Frontmatter + filename (extra formats) + creation date** |
 | Weekly notes · dots · theming | ✓ | ✓ |
 
 It uses its own plugin id (`calendar-hub`), so you can run it alongside Calendar and switch only
@@ -49,7 +49,7 @@ once you are happy.
 - Adjust folder filters directly from the calendar sidebar.
 - Match exact Daily Notes filenames and dates embedded inside longer filenames.
 - Add extra filename date formats such as `YYYYMMDD`, or datetime formats such as `YYYYMMDDTHHmmssZZ`.
-- Use frontmatter date fields as a fallback when the filename has no date.
+- Prefer frontmatter date fields over filename dates, so a note can be re-dated without renaming the file.
 - Optionally map notes without any declared date to the day the file was created.
 - Use note-count dots to see how many matching notes exist on each day.
 - Keep optional weekly-note support for existing Calendar workflows.
@@ -58,13 +58,13 @@ once you are happy.
 
 Calendar Hub maps Markdown files to calendar dates in this order:
 
-1. Exact Daily Notes filename match using your configured Daily Notes format.
-2. Date embedded in the filename using the Daily Notes format.
-3. Date embedded in the filename using any extra formats you configure.
-4. Frontmatter date fallback, only when the filename does not contain a matching date.
-5. File creation date fallback (optional), only when neither the filename nor frontmatter yields a date.
+1. Frontmatter date fields (when enabled) — a note's declared date always wins.
+2. Exact Daily Notes filename match using your configured Daily Notes format.
+3. Date embedded in the filename using the Daily Notes format.
+4. Date embedded in the filename using any extra formats you configure.
+5. File creation date fallback (optional), only when nothing above yields a date.
 
-Filename dates take priority over frontmatter dates, and both take priority over the creation-date fallback. Folder filters apply to every matching source. Creation times are set by your device and can change when files are copied or re-synced, which is why declared dates always win.
+Frontmatter dates take priority over filename dates, and both take priority over the creation-date fallback. Folder filters apply to every matching source. Creation times are set by your device and can change when files are copied or re-synced, which is why declared dates always win.
 
 Datetime formats work too: `YYYYMMDDTHHmmssZZ` matches timestamps like `20260709T143025Z` or `20260709T143025+0800`. A timestamp with a UTC offset is mapped to the calendar day written in the name, not converted to your local timezone.
 
@@ -73,7 +73,7 @@ Datetime formats work too: `YYYYMMDDTHHmmssZZ` matches timestamps like `20260709
 - **Detect daily notes in all folders**: Scan Markdown files outside the configured Daily Notes folder.
 - **Folders to scan for daily notes**: Limit matching to comma-separated folder paths. Leave blank to scan the whole vault.
 - **Date format inside daily note filenames**: Add extra comma-separated formats, such as `YYYYMMDD` or `YYYYMMDDTHHmmssZZ`.
-- **Use frontmatter date fallback**: Read configured frontmatter fields when the filename has no matching date.
+- **Use frontmatter dates**: Read configured frontmatter fields first; the filename is used when no frontmatter date matches.
 - **Frontmatter date fields**: Choose fields such as `date`, `daily_date`, or `calendar.date`.
 - **Use file creation date fallback**: Map notes without any declared date to the day the file was created on disk.
 - **Note count dots**: Solid dots show how many matching notes exist for the day, up to 5 dots.

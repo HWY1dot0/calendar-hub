@@ -43,24 +43,30 @@ export function buildNotesByDate(
   const frontmatterDateFields = getListValues(
     options.frontmatterDateFields ?? ""
   );
+  const extractionFormats = getExtractionFormats(
+    format,
+    options.filenameDateFormat ?? ""
+  );
 
   files.forEach((file) => {
     if (!shouldIndexFile(file, includedFolders)) {
       return;
     }
 
-    const date = getDateFromFilename(
-      file.basename,
-      format,
-      options.filenameDateFormat
+    // Precedence: frontmatter (deliberately curated) > file name (often an
+    // incidental timestamp from tooling) > creation time (device-set).
+    let noteDate = getDateFromFrontmatter(
+      file,
+      frontmatterDateFields,
+      extractionFormats
     );
-    let noteDate = date.isValid()
-      ? date
-      : getDateFromFrontmatter(
-          file,
-          frontmatterDateFields,
-          getExtractionFormats(format, options.filenameDateFormat ?? "")
-        );
+    if (!noteDate.isValid()) {
+      noteDate = getDateFromFilename(
+        file.basename,
+        format,
+        options.filenameDateFormat
+      );
+    }
     if (!noteDate.isValid() && options.useCreationDateFallback) {
       noteDate = getDateFromCreationTime(file);
     }
