@@ -1,4 +1,4 @@
-import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
+import { ItemView, TFile, WorkspaceLeaf, setIcon } from "obsidian";
 
 import { VIEW_TYPE_CALENDAR, VIEW_TYPE_LIST } from "./constants";
 import type CalendarPlugin from "./main";
@@ -32,14 +32,29 @@ export default class ListView extends ItemView {
   }
 
   onOpen(): Promise<void> {
-    this.addAction("calendar", "Open calendar view", () => {
+    const openCalendar = (): void => {
       const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_CALENDAR);
       if (leaves.length) {
         void this.app.workspace.revealLeaf(leaves[0]);
         return;
       }
       this.plugin.initLeaf();
-    });
+    };
+
+    this.contentEl.addClass("calendar-hub-view-content");
+    this.addAction("calendar", "Open calendar view", openCalendar);
+
+    // Sidebars hide the view header (and its actions), so the jump-back
+    // control also lives in an in-content nav bar, file-explorer style.
+    const navButton = this.contentEl
+      .createDiv("nav-header calendar-hub-nav")
+      .createDiv("nav-buttons-container")
+      .createDiv({
+        cls: "clickable-icon nav-action-button",
+        attr: { "aria-label": "Open calendar view" },
+      });
+    setIcon(navButton, "calendar");
+    navButton.addEventListener("click", openCalendar);
 
     // Fresh snapshot even when the calendar view is closed; live updates
     // ride on the calendar view's vault event wiring.
