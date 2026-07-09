@@ -2,11 +2,13 @@
 
 # Calendar Hub
 
-> One calendar, **every** note from that day — no matter which folder it lives in.
+> One calendar, **every** note from that day — and a List view to browse them all by week, month, quarter, or year.
 
 Most calendar plugins map **one note per day**. Calendar Hub doesn't: click a date and it
-surfaces **every note dated to that day** — by the date in its filename or frontmatter —
-wherever it lives in your vault, so you can find, open, and manage them all from a single sidebar.
+surfaces **every note dated to that day** — by its frontmatter, its filename, or (optionally) its
+creation date — wherever it lives in your vault. And when you want the bigger picture, flip the
+same pane into a **List view** and browse everything by period, filtered to just the folders you
+care about.
 
 ![Calendar Hub demo — click a day, see every note from that day across folders](https://raw.githubusercontent.com/HWY1dot0/calendar-hub/main/images/demo.gif)
 
@@ -23,7 +25,8 @@ once:
 - `Work log/work log 20260529.md`
 - `Meeting notes/team sync 20260529.md`
 
-Click the day, see all three.
+Click the day, see all three. Or open the List view and read through everything from that week,
+that month, that quarter — one area of the vault at a time.
 
 ## Calendar Hub vs. the original Calendar
 
@@ -34,28 +37,53 @@ Calendar was missing:
 | | Calendar | Calendar Hub |
 |---|---|---|
 | Notes per day | One configured Daily Note | **Every matching note, in any folder** |
-| Folder scope | Daily Notes folder only | **Whole vault, or just the folders you pick** |
+| Browsing | Month grid only | **List view by year / quarter / month / week** |
+| Folder scope | Daily Notes folder only | **Whole vault, or rule-based folder filters with exclusions** |
 | Date detection | Daily Notes filename | **Frontmatter + filename (extra formats) + creation date** |
 | Weekly notes · dots · theming | ✓ | ✓ |
 
 It uses its own plugin id (`calendar-hub`), so you can run it alongside Calendar and switch only
 once you are happy.
 
-## Features
+## The calendar
 
-- See all notes dated to any selected day (by filename or frontmatter), regardless of folder.
-- Open and manage the day's notes from one panel.
-- Scan the whole vault or limit matching to specific folders.
-- Configure the scan scope with a checkbox folder tree in Settings; focus the List panel with its own filter lens.
-- Browse every indexed note in a dedicated List view — grouped by year, quarter, month, or week, newest or oldest first, with its own folder filter — placed anywhere Obsidian allows, including a full-height workspace tab.
-- Match exact Daily Notes filenames and dates embedded inside longer filenames.
-- Add extra filename date formats such as `YYYYMMDD`, or datetime formats such as `YYYYMMDDTHHmmssZZ`.
-- Prefer frontmatter date fields over filename dates, so a note can be re-dated without renaming the file.
-- Optionally map notes without any declared date to the day the file was created.
-- Use note-count dots to see how many matching notes exist on each day.
-- Keep optional weekly-note support for existing Calendar workflows.
+- Click a day to list **every** note dated to it, whatever folder it lives in; open any of them,
+  or manage them from the panel below the calendar.
+- Note-count dots show how many matching notes each day has, at a glance.
+- Daily and weekly notes keep working exactly as in the original Calendar.
 
-## Date Matching
+## The List view
+
+The List view shows every indexed note as a collapsible tree — **Year**, **Year › Quarter**,
+**Year › Month**, or **Year › Week** — newest or oldest first, with note counts on every group
+header. Today's branch starts expanded, and clicking a note opens it.
+
+It has two homes:
+
+- **In the sidebar**: the button row at the top of the calendar pane flips the same pane into
+  the list and back (the row is styled like the file explorer's buttons — some themes reveal it
+  when you hover the top of the pane). The mode you choose is remembered.
+- **As its own tab**: run the **Open list view** command and drag the tab anywhere — including
+  the main workspace for full-height browsing.
+
+The list also carries its own **Filter folders** lens: the same checkbox tree as the scan scope,
+applied instantly and cleared with one click. Focus the list on `30 Macro` for a quarter-by-
+quarter read-through without touching what the calendar indexes.
+
+## Folder filtering
+
+Two layers, two jobs:
+
+- **Scan scope** (Settings → *Folders to scan for daily notes*) decides what the calendar
+  indexes. It is a rule list: plain entries include a subtree, `-` prefixed entries exclude one,
+  and deeper rules win — so `30 Macro, -30 Macro/Archive` scans 30 Macro except its Archive.
+  A collapsible checkbox tree below the text field writes the rules for you: selecting a folder
+  covers its subtree, unchecking a covered subfolder writes the exclusion, and a dash marks
+  branches that mix included and excluded folders.
+- **The list's Filter folders lens** narrows what the list shows, *within* the scan scope. It
+  never changes the calendar.
+
+## Date matching
 
 Calendar Hub maps Markdown files to calendar dates in this order:
 
@@ -65,9 +93,15 @@ Calendar Hub maps Markdown files to calendar dates in this order:
 4. Date embedded in the filename using any extra formats you configure.
 5. File creation date fallback (optional), only when nothing above yields a date.
 
-Frontmatter dates take priority over filename dates, and both take priority over the creation-date fallback. Folder filters apply to every matching source. Creation times are set by your device and can change when files are copied or re-synced, which is why declared dates always win.
+Frontmatter dates take priority over filename dates, and both take priority over the
+creation-date fallback — creation times are set by your device and can change when files are
+copied or re-synced, which is why declared dates always win. Folder filters apply to every
+matching source.
 
-Datetime formats work too: `YYYYMMDDTHHmmssZZ` matches timestamps like `20260709T143025Z` or `20260709T143025+0800`. A timestamp with a UTC offset is mapped to the calendar day written in the name, not converted to your local timezone.
+Datetime formats work too: `YYYYMMDDTHHmmssZZ` matches timestamps like `20260709T143025Z` or
+`20260709T143025+0800`, and a timestamp with a UTC offset maps to the calendar day written in
+the name, not converted to your local timezone — the same vault buckets identically on machines
+in different timezones.
 
 ## Settings
 
@@ -80,10 +114,6 @@ Datetime formats work too: `YYYYMMDDTHHmmssZZ` matches timestamps like `20260709
 - **Note count dots**: Solid dots show how many matching notes exist for the day, up to 5 dots.
 - **Confirm before creating new note**: Ask before creating a new Daily Note.
 - **Show week number**: Show week numbers and keep legacy weekly-note behavior.
-
-The list has two homes. In the sidebar, the calendar pane flips in place: the list icon in its header switches the same pane to the list (full pane height) and back — the mode is remembered. For big browsing sessions, the "Open list view" command opens a standalone List view whose tab can be dragged anywhere, including the main workspace for full-height reading; its header has a calendar icon to jump back. It groups every indexed note by Year, Year › Quarter, Year › Month, or Year › Week with a newest/oldest sort toggle; today's branch starts expanded, group headers show note counts, and clicking a note opens it. The list has its own Filter folders lens — the same checkbox tree, applied instantly — so you can focus it on one area without touching the calendar's scan scope.
-
-The scan scope is configured in Settings: below the text field, the same collapsible checkbox tree covers a folder's whole subtree when selected, unchecking a covered subfolder writes an exclusion — "everything under 30 Macro except Archive" is two clicks — and a dash marks branches mixing included and excluded folders (click it to select the branch cleanly). The sidebar carries no global scope switch: day-to-day focusing lives in the List panel's own Filter folders lens, so the calendar's scope stays put.
 
 ## Installation
 
@@ -106,12 +136,13 @@ a [release](https://github.com/HWY1dot0/calendar-hub/releases) and copy them int
 ## Commands
 
 - **Open calendar view**: Opens the Calendar Hub sidebar view.
-- **Reveal active note in calendar**: Moves the calendar to the month for the active date-based note.
+- **Open list view**: Opens the standalone List view (right sidebar by default; drag it anywhere).
+- **Reveal active note in calendar**: Moves the calendar to the month for the active date-based note (flips the pane back to the calendar first if it is showing the list).
 - **Open weekly note**: Opens or creates the current weekly note when legacy weekly-note support is enabled.
 
 ## Compatibility
 
-Calendar Hub requires Obsidian `0.9.11` or newer.
+Calendar Hub requires Obsidian `1.4.0` or newer.
 
 The plugin uses Obsidian theme variables and should follow light and dark themes without custom CSS.
 
