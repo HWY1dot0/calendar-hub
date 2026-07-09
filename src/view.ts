@@ -185,7 +185,7 @@ export default class CalendarView extends ItemView {
             changeOpts: (settings: ISettings) => Partial<ISettings>
           ) => this.plugin.writeOptions(changeOpts),
         },
-      }) as unknown as ListPanelComponent;
+      });
     } else {
       this.calendar = new Calendar({
         target: this.contentEl,

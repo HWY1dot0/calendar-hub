@@ -70,9 +70,9 @@ export const defaultSettings: Readonly<ISettings> = Object.freeze({
   dailyNoteFrontmatterDateFields: "date, daily_date, calendar_date",
   shouldIndexDailyNotesFromCreationDate: false,
   dailyNoteIncludedFolders: "",
-  sidebarViewMode: "calendar" as const,
-  listGrouping: "month" as ListGrouping,
-  listSortOrder: "desc" as ListSortOrder,
+  sidebarViewMode: "calendar",
+  listGrouping: "month",
+  listSortOrder: "desc",
   listFolderFilter: "",
   weekStart: "locale",
 
@@ -381,7 +381,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
           foldersField?.setValue(value);
         },
       },
-    }) as unknown as FolderRuleTreeComponent;
+    });
   }
 
   addShowWeeklyNoteSetting(): void {

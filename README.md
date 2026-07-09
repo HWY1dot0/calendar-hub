@@ -142,7 +142,7 @@ a [release](https://github.com/HWY1dot0/calendar-hub/releases) and copy them int
 
 ## Compatibility
 
-Calendar Hub requires Obsidian `1.4.0` or newer.
+Calendar Hub requires Obsidian `1.7.2` or newer.
 
 The plugin uses Obsidian theme variables and should follow light and dark themes without custom CSS.
 

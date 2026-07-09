@@ -54,5 +54,7 @@ export function getAncestorPaths(path: string): string[] {
 export function getExpansionForSelection(
   selectedFolders: string[]
 ): Set<string> {
-  return new Set(selectedFolders.flatMap(getAncestorPaths));
+  return new Set(
+    selectedFolders.flatMap((folder) => getAncestorPaths(folder))
+  );
 }

@@ -108,7 +108,7 @@ Calendar Hub 已上架 Obsidian **社区插件**目录：
 
 ## 兼容性
 
-Calendar Hub 需要 Obsidian `1.4.0` 或更新版本。
+Calendar Hub 需要 Obsidian `1.7.2` 或更新版本。
 
 插件使用 Obsidian 的主题变量，无需自定义 CSS 即可跟随浅色 / 深色主题。
 
