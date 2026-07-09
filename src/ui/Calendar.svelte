@@ -12,6 +12,7 @@
 
   import type { ISettings } from "src/settings";
   import { getDailyNotesForDate } from "src/io/dailyNoteIndex";
+  import { getVaultFolderPaths } from "src/io/vaultFolders";
   import { getWeeklyNotesForDate } from "src/io/weeklyNotes";
   import {
     activeFile,
@@ -33,6 +34,8 @@
   let scanFoldersValue = "";
   let scanFoldersSummary = "";
   let isSavingScanFolders = false;
+  let vaultFolders: string[] = [];
+  let selectedScanFolders: Set<string> = new Set();
 
   $: today = getToday($settings);
   $: if (!displayedMonth && today) {
@@ -64,6 +67,7 @@
   $: scanFoldersSummary = getScanFoldersSummary(
     $settings.dailyNoteIncludedFolders
   );
+  $: selectedScanFolders = new Set(getListValues(scanFoldersValue));
 
   export let displayedMonth: Moment = null;
   export let sources: ICalendarSource[];
@@ -190,7 +194,16 @@
     isScanFoldersOpen = !isScanFoldersOpen;
     if (isScanFoldersOpen) {
       scanFoldersValue = $settings.dailyNoteIncludedFolders;
+      vaultFolders = getVaultFolderPaths();
     }
+  }
+
+  function handleToggleFolderSelection(folder: string): void {
+    const current = getListValues(scanFoldersValue);
+    const next = current.includes(folder)
+      ? current.filter((entry) => entry !== folder)
+      : [...current, folder];
+    scanFoldersValue = next.join(", ");
   }
 
   async function handleSaveScanFolders(): Promise<void> {
@@ -296,6 +309,20 @@
 
   {#if isScanFoldersOpen}
     <div class="calendar-filter-body">
+      {#if vaultFolders.length}
+        <div class="calendar-folder-list">
+          {#each vaultFolders as folder (folder)}
+            <label class="calendar-folder-option">
+              <input
+                type="checkbox"
+                checked={selectedScanFolders.has(folder)}
+                on:change={() => handleToggleFolderSelection(folder)}
+              />
+              <span class="calendar-folder-path" title={folder}>{folder}</span>
+            </label>
+          {/each}
+        </div>
+      {/if}
       <textarea
         class="calendar-filter-textarea"
         rows="3"
