@@ -1,8 +1,11 @@
 import {
   FolderNode,
+  addFolderToSelection,
   flattenFolderTree,
   getAncestorPaths,
+  getCoveringAncestor,
   getExpansionForSelection,
+  getFolderSelectionState,
 } from "./folderTree";
 
 function node(path: string, children: FolderNode[] = []): FolderNode {
@@ -55,6 +58,47 @@ describe("folderTree", () => {
       "30 Macro/Fed",
     ]);
     expect(getAncestorPaths("40 Logs")).toEqual([]);
+  });
+
+  it("derives row states from explicit selection, coverage, and descendants", () => {
+    const selected = new Set(["30 Macro"]);
+
+    expect(getFolderSelectionState("30 Macro", selected)).toBe("selected");
+    expect(getFolderSelectionState("30 Macro/Fed", selected)).toBe("covered");
+    expect(getFolderSelectionState("30 Macro/Fed/Speeches", selected)).toBe(
+      "covered"
+    );
+    expect(getFolderSelectionState("40 Logs", selected)).toBe("none");
+
+    const nested = new Set(["30 Macro/Fed/Speeches"]);
+    expect(getFolderSelectionState("30 Macro", nested)).toBe("partial");
+    expect(getFolderSelectionState("30 Macro/Fed", nested)).toBe("partial");
+    expect(getFolderSelectionState("30 Macro/US Eco", nested)).toBe("none");
+  });
+
+  it("does not treat sibling folders sharing a name prefix as covered", () => {
+    const selected = new Set(["30 Macro"]);
+
+    expect(getFolderSelectionState("30 Macro Extra", selected)).toBe("none");
+  });
+
+  it("names the ancestor that covers a folder", () => {
+    const selected = new Set(["30 Macro"]);
+
+    expect(getCoveringAncestor("30 Macro/Fed/Speeches", selected)).toBe(
+      "30 Macro"
+    );
+    expect(getCoveringAncestor("40 Logs/Daily", selected)).toBeNull();
+  });
+
+  it("prunes entries made redundant when their parent is selected", () => {
+    expect(
+      addFolderToSelection(["30 Macro/Fed", "40 Logs/Daily"], "30 Macro")
+    ).toEqual(["40 Logs/Daily", "30 Macro"]);
+
+    expect(addFolderToSelection(["30 Macro"], "30 Macro")).toEqual([
+      "30 Macro",
+    ]);
   });
 
   it("expands exactly the branches that reveal the selection", () => {

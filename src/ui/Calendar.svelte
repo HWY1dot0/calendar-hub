@@ -14,8 +14,11 @@
   import { getDailyNotesForDate } from "src/io/dailyNoteIndex";
   import type { FolderNode } from "src/io/folderTree";
   import {
+    addFolderToSelection,
     flattenFolderTree,
+    getCoveringAncestor,
     getExpansionForSelection,
+    getFolderSelectionState,
   } from "src/io/folderTree";
   import { getVaultFolderTree } from "src/io/vaultFolders";
   import { getWeeklyNotesForDate } from "src/io/weeklyNotes";
@@ -222,7 +225,7 @@
     const current = getListValues(scanFoldersValue);
     const next = current.includes(folder)
       ? current.filter((entry) => entry !== folder)
-      : [...current, folder];
+      : addFolderToSelection(current, folder);
     scanFoldersValue = next.join(", ");
   }
 
@@ -332,6 +335,10 @@
       {#if visibleFolderRows.length}
         <div class="calendar-folder-list">
           {#each visibleFolderRows as row (row.path)}
+            {@const state = getFolderSelectionState(
+              row.path,
+              selectedScanFolders
+            )}
             <div
               class="calendar-folder-row"
               style="padding-left: {row.depth * 14}px"
@@ -351,10 +358,21 @@
               {:else}
                 <span class="calendar-folder-expand-spacer" />
               {/if}
-              <label class="calendar-folder-option" title={row.path}>
+              <label
+                class="calendar-folder-option"
+                class:is-covered={state === "covered"}
+                title={state === "covered"
+                  ? `${row.path} — included via "${getCoveringAncestor(
+                      row.path,
+                      selectedScanFolders
+                    )}"`
+                  : row.path}
+              >
                 <input
                   type="checkbox"
-                  checked={selectedScanFolders.has(row.path)}
+                  checked={state === "selected" || state === "covered"}
+                  disabled={state === "covered"}
+                  indeterminate={state === "partial"}
                   on:change={() => handleToggleFolderSelection(row.path)}
                 />
                 <span class="calendar-folder-path">{row.name}</span>
