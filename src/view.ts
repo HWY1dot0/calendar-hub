@@ -60,6 +60,9 @@ export default class CalendarView extends ItemView {
     this.registerEvent(this.app.vault.on("delete", this.onFileDeleted));
     this.registerEvent(this.app.vault.on("modify", this.onFileModified));
     this.registerEvent(this.app.vault.on("rename", this.onFileRenamed));
+    this.registerEvent(
+      this.app.metadataCache.on("changed", this.onMetadataChanged)
+    );
     this.registerEvent(this.app.workspace.on("file-open", this.onFileOpen));
 
     this.settings = null;
@@ -225,6 +228,25 @@ export default class CalendarView extends ItemView {
     const date = getDayDateFromFile(file) || getWeekDateFromFile(file);
     if (date && this.calendar) {
       this.calendar.tick();
+    }
+  };
+
+  private onMetadataChanged = (file: TFile): void => {
+    // vault "modify" fires before Obsidian re-parses the file's metadata, so
+    // a frontmatter date edit reindexes against the stale cache and the note
+    // stays on its old day. This event fires once the cache is fresh; skip it
+    // entirely when frontmatter dates are not used for matching.
+    if (this.settings?.shouldIndexDailyNotesFromFrontmatter) {
+      this.refreshCustomDailyNoteIndex(file);
+    }
+    if (
+      this.settings?.shouldIndexWeeklyNotesInAllFolders &&
+      this.settings?.shouldIndexWeeklyNotesFromFrontmatter
+    ) {
+      weeklyNotes.reindex();
+      if (this.calendar) {
+        this.calendar.tick();
+      }
     }
   };
 
