@@ -68,7 +68,7 @@ export default class ListView extends ItemView {
           changeOpts: (settings: ISettings) => Partial<ISettings>
         ) => this.plugin.writeOptions(changeOpts),
       },
-    }) as unknown as ListPanelComponent;
+    });
     return Promise.resolve();
   }
 
