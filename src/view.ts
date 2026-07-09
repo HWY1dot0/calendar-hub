@@ -1,6 +1,13 @@
 import type { Moment } from "./obsidian-moment";
 import { getDailyNoteSettings } from "obsidian-daily-notes-interface";
-import { FileView, TAbstractFile, TFile, ItemView, WorkspaceLeaf } from "obsidian";
+import {
+  FileView,
+  TAbstractFile,
+  TFile,
+  ItemView,
+  WorkspaceLeaf,
+  setIcon,
+} from "obsidian";
 import { get } from "svelte/store";
 
 import { TRIGGER_ON_OPEN, VIEW_TYPE_CALENDAR } from "src/constants";
@@ -17,6 +24,7 @@ import type { ISettings } from "src/settings";
 import type CalendarPlugin from "./main";
 
 import Calendar from "./ui/Calendar.svelte";
+import ListPanel from "./ui/ListPanel.svelte";
 import { showFileMenu } from "./ui/fileMenu";
 import {
   activeFile,
@@ -41,8 +49,17 @@ interface CalendarComponent {
   $destroy(): void;
 }
 
+interface ListPanelComponent {
+  $destroy(): void;
+}
+
+type SidebarViewMode = "calendar" | "list";
+
 export default class CalendarView extends ItemView {
-  private calendar: CalendarComponent;
+  private calendar: CalendarComponent | null = null;
+  private listPanel: ListPanelComponent | null = null;
+  private modeAction: HTMLElement | null = null;
+  private sources: unknown[] = [];
   private plugin: CalendarPlugin;
   private settings: ISettings;
 
@@ -89,42 +106,88 @@ export default class CalendarView extends ItemView {
   }
 
   onClose(): Promise<void> {
-    if (this.calendar) {
-      this.calendar.$destroy();
-    }
+    this.destroyModeComponents();
     return Promise.resolve();
   }
 
   onOpen(): Promise<void> {
-    this.addAction("list", "Open list view", () => {
-      this.plugin.initListLeaf();
-    });
+    this.modeAction = this.addAction(
+      "list",
+      "Switch to list view",
+      this.toggleMode
+    );
 
     // Integration point: external plugins can listen for
     // `calendar-hub:open` to feed in additional sources.
-    const sources = [
+    this.sources = [
       customTagsSource,
       streakSource,
       noteCountSource,
       tasksSource,
     ];
-    this.app.workspace.trigger(TRIGGER_ON_OPEN, sources);
+    this.app.workspace.trigger(TRIGGER_ON_OPEN, this.sources);
 
-    this.calendar = new Calendar({
-      target: this.contentEl,
-      props: {
-        onClickDay: this.openOrCreateDailyNote,
-        onClickWeek: this.openOrCreateWeeklyNote,
-        onHoverDay: this.onHoverDay,
-        onHoverWeek: this.onHoverWeek,
-        onContextMenuDay: this.onContextMenuDay,
-        onContextMenuWeek: this.onContextMenuWeek,
-        onOpenDayNote: this.openDailyNoteFile,
-        sources,
-      },
-    }) as unknown as CalendarComponent;
+    this.renderMode(this.getMode());
 
     return Promise.resolve();
+  }
+
+  private getMode(): SidebarViewMode {
+    return this.settings?.sidebarViewMode === "list" ? "list" : "calendar";
+  }
+
+  private toggleMode = (): void => {
+    const next: SidebarViewMode =
+      this.getMode() === "calendar" ? "list" : "calendar";
+    void this.plugin.writeOptions(() => ({ sidebarViewMode: next }));
+    this.renderMode(next);
+  };
+
+  private destroyModeComponents(): void {
+    this.calendar?.$destroy();
+    this.calendar = null;
+    this.listPanel?.$destroy();
+    this.listPanel = null;
+  }
+
+  /** Renders the pane in place: the same leaf flips between the calendar and
+   *  the list, so browsing does not require a second pane. */
+  private renderMode(mode: SidebarViewMode): void {
+    this.destroyModeComponents();
+    this.contentEl.empty();
+
+    if (mode === "list") {
+      this.listPanel = new ListPanel({
+        target: this.contentEl,
+        props: {
+          onOpenNote: this.openDailyNoteFile,
+          onUpdateSettings: (
+            changeOpts: (settings: ISettings) => Partial<ISettings>
+          ) => this.plugin.writeOptions(changeOpts),
+        },
+      }) as unknown as ListPanelComponent;
+    } else {
+      this.calendar = new Calendar({
+        target: this.contentEl,
+        props: {
+          onClickDay: this.openOrCreateDailyNote,
+          onClickWeek: this.openOrCreateWeeklyNote,
+          onHoverDay: this.onHoverDay,
+          onHoverWeek: this.onHoverWeek,
+          onContextMenuDay: this.onContextMenuDay,
+          onContextMenuWeek: this.onContextMenuWeek,
+          onOpenDayNote: this.openDailyNoteFile,
+          sources: this.sources,
+        },
+      }) as unknown as CalendarComponent;
+    }
+
+    if (this.modeAction) {
+      const title =
+        mode === "calendar" ? "Switch to list view" : "Switch to calendar view";
+      setIcon(this.modeAction, mode === "calendar" ? "list" : "calendar");
+      this.modeAction.setAttribute("aria-label", title);
+    }
   }
 
   onHoverDay = (
@@ -254,7 +317,10 @@ export default class CalendarView extends ItemView {
   };
 
   private onFileCreated = (file: TAbstractFile): void => {
-    if (!this.app.workspace.layoutReady || !this.calendar) {
+    if (
+      !this.app.workspace.layoutReady ||
+      !(this.calendar || this.listPanel)
+    ) {
       return;
     }
     const refreshedDaily = this.refreshCustomDailyNoteIndex(file);
@@ -263,27 +329,33 @@ export default class CalendarView extends ItemView {
     }
     if (!refreshedDaily && getDayDateFromFile(file)) {
       dailyNotes.reindex();
-      this.calendar.tick();
+      if (this.calendar) {
+        this.calendar.tick();
+      }
     }
     if (
       this.settings?.shouldIndexWeeklyNotesInAllFolders ||
       getWeekDateFromFile(file)
     ) {
       weeklyNotes.reindex();
-      this.calendar.tick();
+      if (this.calendar) {
+        this.calendar.tick();
+      }
     }
   };
 
   private onFileRenamed = (file: TAbstractFile, oldPath: string): void => {
     if (
       this.app.workspace.layoutReady &&
-      this.calendar &&
+      (this.calendar || this.listPanel) &&
       (this.isMarkdownFile(file) || oldPath.endsWith(".md"))
     ) {
       dailyNotes.reindex();
       weeklyNotes.reindex();
       this.updateActiveFile();
-      this.calendar.tick();
+      if (this.calendar) {
+        this.calendar.tick();
+      }
     }
   };
 
@@ -306,6 +378,16 @@ export default class CalendarView extends ItemView {
     const { moment } = window;
     const view = this.app.workspace.getActiveViewOfType(FileView);
     if (!view?.file) {
+      return;
+    }
+
+    // Revealing only makes sense on the calendar; flip back if the pane is
+    // currently showing the list.
+    if (!this.calendar) {
+      void this.plugin.writeOptions(() => ({ sidebarViewMode: "calendar" }));
+      this.renderMode("calendar");
+    }
+    if (!this.calendar) {
       return;
     }
 
@@ -387,7 +469,7 @@ export default class CalendarView extends ItemView {
   private refreshCustomDailyNoteIndex(file: TAbstractFile): boolean {
     if (
       !this.app.workspace.layoutReady ||
-      !this.calendar ||
+      !(this.calendar || this.listPanel) ||
       !this.settings?.shouldIndexDailyNotesInAllFolders ||
       !this.isMarkdownFile(file)
     ) {
@@ -396,7 +478,9 @@ export default class CalendarView extends ItemView {
 
     dailyNotes.reindex();
     this.updateActiveFile();
-    this.calendar.tick();
+    if (this.calendar) {
+      this.calendar.tick();
+    }
     return true;
   }
 
