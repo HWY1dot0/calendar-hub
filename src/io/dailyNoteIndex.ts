@@ -7,6 +7,8 @@ import {
   getDateUID,
 } from "obsidian-daily-notes-interface";
 
+import { parseFolderRules, shouldIncludeFilePath } from "./folderRules";
+
 export type DailyNotesByDate = Record<string, TFile[]>;
 export type DailyNotesByDateMap = Record<string, TFile>;
 
@@ -39,7 +41,7 @@ export function buildNotesByDate(
 ): DailyNotesByDate {
   const notesByDate: DailyNotesByDate = {};
   const { format, granularity } = options;
-  const includedFolders = getIncludedFolders(options.includedFolders ?? "");
+  const folderRules = parseFolderRules(options.includedFolders ?? "");
   const frontmatterDateFields = getListValues(
     options.frontmatterDateFields ?? ""
   );
@@ -49,7 +51,7 @@ export function buildNotesByDate(
   );
 
   files.forEach((file) => {
-    if (!shouldIndexFile(file, includedFolders)) {
+    if (!shouldIncludeFilePath(file.path, folderRules)) {
       return;
     }
 
@@ -246,30 +248,11 @@ function getDateFromCreationTime(file: TFile): Moment {
   return ctime ? window.moment(ctime) : window.moment.invalid();
 }
 
-function getIncludedFolders(includedFolders: string): string[] {
-  return getListValues(includedFolders).map((folder) =>
-    folder.replace(/^\/+|\/+$/g, "")
-  );
-}
-
 function getListValues(value: string): string[] {
   return value
     .split(/[,\n]/)
     .map((entry) => entry.trim())
     .filter(Boolean);
-}
-
-function shouldIndexFile(file: TFile, includedFolders: string[]): boolean {
-  if (!includedFolders.length) {
-    return true;
-  }
-
-  return includedFolders.some((folder) => {
-    if (folder === "." || folder === "/") {
-      return true;
-    }
-    return file.path === `${folder}.md` || file.path.startsWith(`${folder}/`);
-  });
 }
 
 type MomentFormat = Parameters<typeof window.moment>[1];
