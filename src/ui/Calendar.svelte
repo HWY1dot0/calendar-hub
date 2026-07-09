@@ -12,13 +12,17 @@
 
   import type { ISettings } from "src/settings";
   import { getDailyNotesForDate } from "src/io/dailyNoteIndex";
+  import type { FolderRule } from "src/io/folderRules";
+  import {
+    getFolderCheckState,
+    parseFolderRules,
+    serializeFolderRules,
+    toggleFolderRule,
+  } from "src/io/folderRules";
   import type { FolderNode } from "src/io/folderTree";
   import {
-    addFolderToSelection,
     flattenFolderTree,
-    getCoveringAncestor,
     getExpansionForSelection,
-    getFolderSelectionState,
   } from "src/io/folderTree";
   import { getVaultFolderTree } from "src/io/vaultFolders";
   import { getWeeklyNotesForDate } from "src/io/weeklyNotes";
@@ -44,7 +48,7 @@
   let isSavingScanFolders = false;
   let folderTree: FolderNode[] = [];
   let expandedFolders: Set<string> = new Set();
-  let selectedScanFolders: Set<string> = new Set();
+  let scanFolderRules: FolderRule[] = [];
 
   $: today = getToday($settings);
   $: if (!displayedMonth && today) {
@@ -76,7 +80,7 @@
   $: scanFoldersSummary = getScanFoldersSummary(
     $settings.dailyNoteIncludedFolders
   );
-  $: selectedScanFolders = new Set(getListValues(scanFoldersValue));
+  $: scanFolderRules = parseFolderRules(scanFoldersValue);
   $: visibleFolderRows = flattenFolderTree(folderTree, expandedFolders);
 
   export let displayedMonth: Moment = null;
@@ -206,7 +210,9 @@
       scanFoldersValue = $settings.dailyNoteIncludedFolders;
       folderTree = getVaultFolderTree();
       expandedFolders = getExpansionForSelection(
-        getListValues($settings.dailyNoteIncludedFolders)
+        parseFolderRules($settings.dailyNoteIncludedFolders).map(
+          (rule) => rule.path
+        )
       );
     }
   }
@@ -222,11 +228,9 @@
   }
 
   function handleToggleFolderSelection(folder: string): void {
-    const current = getListValues(scanFoldersValue);
-    const next = current.includes(folder)
-      ? current.filter((entry) => entry !== folder)
-      : addFolderToSelection(current, folder);
-    scanFoldersValue = next.join(", ");
+    scanFoldersValue = serializeFolderRules(
+      toggleFolderRule(folder, scanFolderRules)
+    );
   }
 
   async function handleSaveScanFolders(): Promise<void> {
@@ -253,22 +257,21 @@
   }
 
   function getScanFoldersSummary(value: string): string {
-    const folders = getListValues(value);
-    if (!folders.length) {
+    const rules = parseFolderRules(value);
+    const includes = rules.filter((rule) => !rule.excluded).length;
+    const excludes = rules.length - includes;
+    if (!includes && !excludes) {
       return "All vault";
     }
-    return `${folders.length} folder${folders.length === 1 ? "" : "s"}`;
+    if (!includes) {
+      return `All vault − ${excludes}`;
+    }
+    const base = `${includes} folder${includes === 1 ? "" : "s"}`;
+    return excludes ? `${base} − ${excludes}` : base;
   }
 
   function formatNoteCount(count: number): string {
     return `${count} note${count === 1 ? "" : "s"}`;
-  }
-
-  function getListValues(value: string): string[] {
-    return value
-      .split(/[,\n]/)
-      .map((entry) => entry.trim())
-      .filter(Boolean);
   }
 </script>
 
@@ -335,10 +338,7 @@
       {#if visibleFolderRows.length}
         <div class="calendar-folder-list">
           {#each visibleFolderRows as row (row.path)}
-            {@const state = getFolderSelectionState(
-              row.path,
-              selectedScanFolders
-            )}
+            {@const state = getFolderCheckState(row.path, scanFolderRules)}
             <div
               class="calendar-folder-row"
               style="padding-left: {row.depth * 14}px"
@@ -358,20 +358,10 @@
               {:else}
                 <span class="calendar-folder-expand-spacer" />
               {/if}
-              <label
-                class="calendar-folder-option"
-                class:is-covered={state === "covered"}
-                title={state === "covered"
-                  ? `${row.path} — included via "${getCoveringAncestor(
-                      row.path,
-                      selectedScanFolders
-                    )}"`
-                  : row.path}
-              >
+              <label class="calendar-folder-option" title={row.path}>
                 <input
                   type="checkbox"
-                  checked={state === "selected" || state === "covered"}
-                  disabled={state === "covered"}
+                  checked={state === "checked"}
                   indeterminate={state === "partial"}
                   on:change={() => handleToggleFolderSelection(row.path)}
                 />

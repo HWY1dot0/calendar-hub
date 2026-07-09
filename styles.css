@@ -225,11 +225,6 @@
   padding: 2px 4px 2px 0;
 }
 
-.calendar-folder-option.is-covered {
-  cursor: default;
-  opacity: 0.65;
-}
-
 .calendar-folder-option input[type="checkbox"] {
   flex-shrink: 0;
   margin: 0;

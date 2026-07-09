@@ -260,7 +260,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName("Folders to scan for daily notes")
       .setDesc(
-        "Optional. Leave blank to scan the whole vault. Add comma-separated folder paths to limit filename and frontmatter matching."
+        "Optional. Leave blank to scan the whole vault. Add comma-separated folder paths to limit filename and frontmatter matching. Prefix a path with '-' to exclude its subtree, e.g. '30 Macro, -30 Macro/Archive'; deeper rules win."
       )
       .addTextArea((textarea) => {
         textarea.setPlaceholder(
@@ -347,7 +347,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName("Folders to scan for weekly notes")
       .setDesc(
-        "Optional. Leave blank to scan the whole vault. Add comma-separated folder paths to limit weekly filename and frontmatter matching."
+        "Optional. Leave blank to scan the whole vault. Add comma-separated folder paths to limit weekly filename and frontmatter matching. Prefix a path with '-' to exclude its subtree; deeper rules win."
       )
       .addTextArea((textarea) => {
         textarea.setPlaceholder("Journal, Work/Weekly, Reviews");

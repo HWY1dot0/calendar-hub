@@ -71,7 +71,7 @@ Datetime formats work too: `YYYYMMDDTHHmmssZZ` matches timestamps like `20260709
 ## Settings
 
 - **Detect daily notes in all folders**: Scan Markdown files outside the configured Daily Notes folder.
-- **Folders to scan for daily notes**: Limit matching to comma-separated folder paths. Leave blank to scan the whole vault.
+- **Folders to scan for daily notes**: Limit matching to comma-separated folder paths. Leave blank to scan the whole vault. Prefix a path with `-` to exclude its subtree (e.g. `30 Macro, -30 Macro/Archive`); deeper rules win.
 - **Date format inside daily note filenames**: Add extra comma-separated formats, such as `YYYYMMDD` or `YYYYMMDDTHHmmssZZ`.
 - **Use frontmatter dates**: Read configured frontmatter fields first; the filename is used when no frontmatter date matches.
 - **Frontmatter date fields**: Choose fields such as `date`, `daily_date`, or `calendar.date`. When a note has several date fields, they are tried in the order you list them and the first valid date wins — put the field you trust most first.
@@ -80,7 +80,7 @@ Datetime formats work too: `YYYYMMDDTHHmmssZZ` matches timestamps like `20260709
 - **Confirm before creating new note**: Ask before creating a new Daily Note.
 - **Show week number**: Show week numbers and keep legacy weekly-note behavior.
 
-The folder filter can also be adjusted directly from the calendar sidebar: the Scan folders panel shows the vault's folders as a collapsible tree with checkboxes. Selecting a folder covers its whole subtree — subfolders display as checked and dimmed — and a dash marks collapsed branches that contain a selection. Branches with selected folders start expanded, and the text box remains available for manual edits.
+The folder filter can also be adjusted directly from the calendar sidebar: the Scan folders panel shows the vault's folders as a collapsible tree with checkboxes. Selecting a folder covers its whole subtree, and unchecking a covered subfolder writes an exclusion — "everything under 30 Macro except Archive" is two clicks. A dash marks branches whose subtree mixes included and excluded folders; clicking it selects the whole branch cleanly. Branches with configured folders start expanded, and the text box remains available for manual edits.
 
 ## Installation
 
