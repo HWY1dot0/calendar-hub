@@ -46,14 +46,7 @@ export default class CalendarPlugin extends Plugin {
     this.addCommand({
       id: "show-calendar-view",
       name: "Open calendar view",
-      checkCallback: (checking: boolean) => {
-        if (checking) {
-          return (
-            this.app.workspace.getLeavesOfType(VIEW_TYPE_CALENDAR).length === 0
-          );
-        }
-        this.initLeaf();
-      },
+      callback: () => this.revealCalendarLeaf(),
     });
 
     this.addCommand({
@@ -106,6 +99,21 @@ export default class CalendarPlugin extends Plugin {
     void leaf.setViewState({
       type: VIEW_TYPE_CALENDAR,
     });
+  }
+
+  /** Command entry point: the calendar leaf is created on startup, so the
+   *  common case here is "it exists but the user cannot see it" — collapsed
+   *  in the sidebar, on an inactive tab, or flipped to the list. Reveal it and
+   *  flip it back rather than bailing out (the old checkCallback hid the
+   *  command entirely whenever a leaf existed, i.e. almost always). */
+  revealCalendarLeaf(): void {
+    const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_CALENDAR);
+    if (!existing.length) {
+      this.initLeaf();
+      return;
+    }
+    void this.app.workspace.revealLeaf(existing[0]);
+    this.getCalendarView()?.showCalendar();
   }
 
   private getCalendarView(): CalendarView | null {

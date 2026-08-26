@@ -394,6 +394,16 @@ export default class CalendarView extends ItemView {
     }
   }
 
+  /** Flips the pane back to the calendar if it is currently showing the list.
+   *  No-op when the calendar is already on screen. */
+  public showCalendar(): void {
+    if (this.calendar) {
+      return;
+    }
+    void this.plugin.writeOptions(() => ({ sidebarViewMode: "calendar" }));
+    this.renderMode("calendar");
+  }
+
   public revealActiveNote(): void {
     const { moment } = window;
     const view = this.app.workspace.getActiveViewOfType(FileView);
@@ -403,10 +413,7 @@ export default class CalendarView extends ItemView {
 
     // Revealing only makes sense on the calendar; flip back if the pane is
     // currently showing the list.
-    if (!this.calendar) {
-      void this.plugin.writeOptions(() => ({ sidebarViewMode: "calendar" }));
-      this.renderMode("calendar");
-    }
+    this.showCalendar();
     if (!this.calendar) {
       return;
     }
