@@ -64,6 +64,7 @@ export default class CalendarView extends ItemView {
   private calendar: CalendarComponent | null = null;
   private listPanel: ListPanelComponent | null = null;
   private modeAction: HTMLElement | null = null;
+  private navBar: HTMLElement | null = null;
   private sources: unknown[] = [];
   private plugin: CalendarPlugin;
   private settings: ISettings;
@@ -77,6 +78,11 @@ export default class CalendarView extends ItemView {
         "periodic-notes:settings-updated",
         this.onNoteSettingsUpdate
       )
+    );
+    // Moving the pane between a sidebar and the main area (or hiding view
+    // headers in the settings) changes which of the two controls is visible.
+    this.registerEvent(
+      this.app.workspace.on("layout-change", this.syncNavBarVisibility)
     );
     this.registerEvent(this.app.vault.on("create", this.onFileCreated));
     this.registerEvent(this.app.vault.on("delete", this.onFileDeleted));
@@ -95,6 +101,7 @@ export default class CalendarView extends ItemView {
       if (this.calendar) {
         this.calendar.tick();
       }
+      this.syncNavBarVisibility();
     });
   }
 
@@ -118,7 +125,7 @@ export default class CalendarView extends ItemView {
   onOpen(): Promise<void> {
     this.contentEl.addClass("calendar-hub-view-content");
     this.modeAction = this.addAction(
-      "list",
+      "layout-list",
       "Switch to list view",
       this.toggleMode
     );
@@ -149,6 +156,30 @@ export default class CalendarView extends ItemView {
     this.renderMode(next);
   };
 
+  /** Obsidian hides a pane's `.view-header` — and with it the `addAction`
+   *  icons — inside the sidebars, so the in-content toolbar stands in for it
+   *  there. Whenever the header is actually visible, that toolbar would be a
+   *  second copy of the same control, so it stays hidden. */
+  private syncNavBarVisibility = (): void => {
+    if (!this.navBar) {
+      return;
+    }
+    // The sidebar check mirrors Obsidian's own `display: none` rule and holds
+    // even before the pane is attached; the computed style also covers the
+    // global "show view header" setting and theme overrides.
+    const inSidebar = this.containerEl.closest(
+      ".workspace-split.mod-left-split, .workspace-split.mod-right-split"
+    );
+    const header = this.containerEl.querySelector(".view-header");
+    const headerVisible =
+      !inSidebar &&
+      (header === null || getComputedStyle(header).display !== "none");
+    this.navBar.classList.toggle(
+      "calendar-hub-nav-hidden",
+      headerVisible || !this.settings?.shouldShowViewSwitcher
+    );
+  };
+
   private destroyModeComponents(): void {
     this.calendar?.$destroy();
     this.calendar = null;
@@ -162,12 +193,11 @@ export default class CalendarView extends ItemView {
     this.destroyModeComponents();
     this.contentEl.empty();
 
-    // Sidebars hide the view header (and its actions), so the flip control
-    // lives in a standard nav-header, the same idiom as the file explorer's
-    // buttons — themes style it consistently (Cupertino, for one, collapses
-    // it until the pane is hovered).
-    const navButton = this.contentEl
-      .createDiv("nav-header calendar-hub-nav")
+    // Sidebars hide the view header (and with it the action icons), so the
+    // flip control is mirrored into the pane. Where the header is visible the
+    // mirror is redundant and is kept collapsed by syncNavBarVisibility().
+    this.navBar = this.contentEl.createDiv("nav-header calendar-hub-nav");
+    const navButton = this.navBar
       .createDiv("nav-buttons-container")
       .createDiv({
         cls: "clickable-icon nav-action-button",
@@ -178,8 +208,9 @@ export default class CalendarView extends ItemView {
               : "Switch to calendar view",
         },
       });
-    setIcon(navButton, mode === "calendar" ? "list" : "calendar");
+    setIcon(navButton, mode === "calendar" ? "layout-list" : "calendar-days");
     navButton.addEventListener("click", this.toggleMode);
+    this.syncNavBarVisibility();
 
     if (mode === "list") {
       this.listPanel = new ListPanel({

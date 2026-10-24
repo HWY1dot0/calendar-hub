@@ -24,6 +24,7 @@ import type CalendarPlugin from "./main";
 export interface ISettings {
   wordsPerDot: number;
   maxNoteDots: number;
+  shouldShowViewSwitcher: boolean;
   weekStart: IWeekStartOption;
   shouldConfirmBeforeCreate: boolean;
   shouldIndexDailyNotesInAllFolders: boolean;
@@ -79,6 +80,7 @@ export const defaultSettings: Readonly<ISettings> = Object.freeze({
 
   wordsPerDot: DEFAULT_WORDS_PER_DOT,
   maxNoteDots: DEFAULT_MAX_NOTE_DOTS,
+  shouldShowViewSwitcher: false,
 
   showWeeklyNote: false,
   weeklyNoteFormat: "",
@@ -139,8 +141,10 @@ export class CalendarSettingsTab extends PluginSettingTab {
       });
     }
 
+    this.addDefaultViewSetting();
     this.addWeekStartSetting();
     this.addMaxNoteDotsSetting();
+    this.addShowViewSwitcherSetting();
     this.addConfirmCreateSetting();
 
     // Ordered like the matching pipeline: master switch, folder scope, then
@@ -205,6 +209,24 @@ export class CalendarSettingsTab extends PluginSettingTab {
       });
   }
 
+  addDefaultViewSetting(): void {
+    new Setting(this.containerEl)
+      .setName("Default view")
+      .setDesc(
+        "Which view the Calendar Hub pane opens in. Switching views with the in-pane button also updates this."
+      )
+      .addDropdown((dropdown) => {
+        dropdown.addOption("calendar", "Calendar");
+        dropdown.addOption("list", "List");
+        dropdown.setValue(this.plugin.options.sidebarViewMode);
+        dropdown.onChange(async (value) => {
+          await this.plugin.writeOptions(() => ({
+            sidebarViewMode: value as ISettings["sidebarViewMode"],
+          }));
+        });
+      });
+  }
+
   addMaxNoteDotsSetting(): void {
     new Setting(this.containerEl)
       .setName("Maximum dots per day")
@@ -219,6 +241,22 @@ export class CalendarSettingsTab extends PluginSettingTab {
         dropdown.onChange(async (value) => {
           await this.plugin.writeOptions(() => ({
             maxNoteDots: parseInt(value, 10),
+          }));
+        });
+      });
+  }
+
+  addShowViewSwitcherSetting(): void {
+    new Setting(this.containerEl)
+      .setName("Show view switcher in sidebar panes")
+      .setDesc(
+        "Calendar Hub mirrors the calendar/list toggle into the top of the pane when it is docked in a sidebar, where Obsidian hides the view header. Off by default; the \"Open list view\" and \"Open calendar view\" commands always work."
+      )
+      .addToggle((toggle) => {
+        toggle.setValue(this.plugin.options.shouldShowViewSwitcher);
+        toggle.onChange(async (value) => {
+          await this.plugin.writeOptions(() => ({
+            shouldShowViewSwitcher: value,
           }));
         });
       });
