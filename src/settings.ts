@@ -16,13 +16,14 @@ import FolderRuleTree from "src/ui/FolderRuleTree.svelte";
 import { appHasDailyNotesPluginLoaded } from "obsidian-daily-notes-interface";
 import type { ILocaleOverride, IWeekStartOption } from "obsidian-calendar-ui";
 
-import { DEFAULT_WEEK_FORMAT, DEFAULT_WORDS_PER_DOT } from "src/constants";
+import { DEFAULT_MAX_NOTE_DOTS, DEFAULT_WEEK_FORMAT, DEFAULT_WORDS_PER_DOT } from "src/constants";
 import type { ListGrouping, ListSortOrder } from "src/ui/listViewModel";
 
 import type CalendarPlugin from "./main";
 
 export interface ISettings {
   wordsPerDot: number;
+  maxNoteDots: number;
   weekStart: IWeekStartOption;
   shouldConfirmBeforeCreate: boolean;
   shouldIndexDailyNotesInAllFolders: boolean;
@@ -77,6 +78,7 @@ export const defaultSettings: Readonly<ISettings> = Object.freeze({
   weekStart: "locale",
 
   wordsPerDot: DEFAULT_WORDS_PER_DOT,
+  maxNoteDots: DEFAULT_MAX_NOTE_DOTS,
 
   showWeeklyNote: false,
   weeklyNoteFormat: "",
@@ -138,6 +140,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
     }
 
     this.addWeekStartSetting();
+    this.addMaxNoteDotsSetting();
     this.addConfirmCreateSetting();
 
     // Ordered like the matching pipeline: master switch, folder scope, then
@@ -197,6 +200,25 @@ export class CalendarSettingsTab extends PluginSettingTab {
         dropdown.onChange(async (value) => {
           await this.plugin.writeOptions(() => ({
             weekStart: value as IWeekStartOption,
+          }));
+        });
+      });
+  }
+
+  addMaxNoteDotsSetting(): void {
+    new Setting(this.containerEl)
+      .setName("Maximum dots per day")
+      .setDesc(
+        "How many note dots to show under a day before stopping. Days with more notes still list every note in the agenda below the calendar."
+      )
+      .addDropdown((dropdown) => {
+        for (let count = 1; count <= 5; count += 1) {
+          dropdown.addOption(String(count), String(count));
+        }
+        dropdown.setValue(String(this.plugin.options.maxNoteDots));
+        dropdown.onChange(async (value) => {
+          await this.plugin.writeOptions(() => ({
+            maxNoteDots: parseInt(value, 10),
           }));
         });
       });

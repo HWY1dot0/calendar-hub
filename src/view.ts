@@ -2,6 +2,7 @@ import type { Moment } from "./obsidian-moment";
 import { getDailyNoteSettings } from "obsidian-daily-notes-interface";
 import {
   FileView,
+  Notice,
   TAbstractFile,
   TFile,
   ItemView,
@@ -11,7 +12,11 @@ import {
 import { get } from "svelte/store";
 
 import { TRIGGER_ON_OPEN, VIEW_TYPE_CALENDAR } from "src/constants";
-import { getDayDateFromFile, tryToCreateDailyNote } from "src/io/dailyNotes";
+import {
+  createDailyNoteFile,
+  getDayDateFromFile,
+  tryToCreateDailyNote,
+} from "src/io/dailyNotes";
 import { getDailyNotesForDate } from "src/io/dailyNoteIndex";
 import {
   getWeekDateFromFile,
@@ -192,6 +197,7 @@ export default class CalendarView extends ItemView {
         props: {
           onClickDay: this.openOrCreateDailyNote,
           onClickWeek: this.openOrCreateWeeklyNote,
+          onCreateDayNote: this.createDayNote,
           onHoverDay: this.onHoverDay,
           onHoverWeek: this.onHoverWeek,
           onContextMenuDay: this.onContextMenuDay,
@@ -492,6 +498,19 @@ export default class CalendarView extends ItemView {
   private getDailyNotes(date: Moment): TFile[] {
     return getDailyNotesForDate(date, get(dailyNotesByDate), get(dailyNotes));
   }
+
+  /** Explicit "New note" action for the day shown in the agenda panel: unlike
+   *  clicking the date (which opens the note when there is exactly one), this
+   *  always creates another note, letting `createDailyNoteFile` pick the next
+   *  free name ("2026-10-21", then "2026-10-21 (1)", ...). */
+  private createDayNote = (date: Moment): void => {
+    void createDailyNoteFile(date)
+      .then((file) => this.openDailyNoteFile(file, false))
+      .catch((err) => {
+        console.error("[Calendar Hub] Failed to create daily note", err);
+        new Notice("Unable to create the daily note.");
+      });
+  };
 
   private refreshCustomDailyNoteIndex(file: TAbstractFile): boolean {
     if (

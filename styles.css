@@ -113,6 +113,35 @@
   padding: 4px 0;
 }
 
+.calendar-note-create {
+  align-items: center;
+  background: transparent;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 4px;
+  box-shadow: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  flex-shrink: 0;
+  font: inherit;
+  font-size: 12px;
+  height: auto;
+  justify-content: center;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  width: 100%;
+}
+
+.calendar-note-create:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.calendar-note-create:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
 .calendar-filter-panel {
   border-top: 1px solid var(--background-modifier-border);
   margin-top: 10px;
