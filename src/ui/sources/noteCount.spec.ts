@@ -33,8 +33,8 @@ describe("noteCountSource", () => {
     expect(getNoteCountAsDots(0)).toEqual([]);
   });
 
-  it("limits note count dots to three by default", () => {
-    expect(getNoteCountAsDots(8)).toHaveLength(3);
+  it("limits note count dots to five by default", () => {
+    expect(getNoteCountAsDots(8)).toHaveLength(5);
   });
 
   it("honors a custom dot limit", () => {
