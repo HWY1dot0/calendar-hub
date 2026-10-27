@@ -91,13 +91,9 @@ export default class ListView extends ItemView {
     if (!this.navBar) {
       return;
     }
-    const inSidebar = this.containerEl.closest(
-      ".workspace-split.mod-left-split, .workspace-split.mod-right-split"
-    );
     const header = this.containerEl.querySelector(".view-header");
     const headerVisible =
-      !inSidebar &&
-      (header === null || getComputedStyle(header).display !== "none");
+      header !== null && getComputedStyle(header).display !== "none";
     this.navBar.classList.toggle(
       "calendar-hub-nav-hidden",
       headerVisible || this.plugin.options?.shouldShowViewSwitcher === false

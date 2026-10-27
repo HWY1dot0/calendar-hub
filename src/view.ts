@@ -164,16 +164,9 @@ export default class CalendarView extends ItemView {
     if (!this.navBar) {
       return;
     }
-    // The sidebar check mirrors Obsidian's own `display: none` rule and holds
-    // even before the pane is attached; the computed style also covers the
-    // global "show view header" setting and theme overrides.
-    const inSidebar = this.containerEl.closest(
-      ".workspace-split.mod-left-split, .workspace-split.mod-right-split"
-    );
     const header = this.containerEl.querySelector(".view-header");
     const headerVisible =
-      !inSidebar &&
-      (header === null || getComputedStyle(header).display !== "none");
+      header !== null && getComputedStyle(header).display !== "none";
     this.navBar.classList.toggle(
       "calendar-hub-nav-hidden",
       headerVisible || !this.settings?.shouldShowViewSwitcher
@@ -242,7 +235,10 @@ export default class CalendarView extends ItemView {
     if (this.modeAction) {
       const title =
         mode === "calendar" ? "Switch to list view" : "Switch to calendar view";
-      setIcon(this.modeAction, mode === "calendar" ? "list" : "calendar");
+      setIcon(
+        this.modeAction,
+        mode === "calendar" ? "layout-list" : "calendar-days"
+      );
       this.modeAction.setAttribute("aria-label", title);
     }
   }
