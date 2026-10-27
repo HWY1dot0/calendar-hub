@@ -93,7 +93,9 @@ function renderDailyTemplate(
   format: string
 ): string {
   return templateContents
-    .replace(/{{\s*date\s*}}/gi, filename)
+    // {{date}} must stay a real date for properties and queries; only
+    // {{title}} carries the numbered suffix the new note was saved under.
+    .replace(/{{\s*date\s*}}/gi, date.format(format))
     .replace(/{{\s*time\s*}}/gi, window.moment().format("HH:mm"))
     .replace(/{{\s*title\s*}}/gi, filename)
     .replace(
