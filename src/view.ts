@@ -2,6 +2,7 @@ import type { Moment } from "./obsidian-moment";
 import { getDailyNoteSettings } from "obsidian-daily-notes-interface";
 import {
   FileView,
+  Notice,
   TAbstractFile,
   TFile,
   ItemView,
@@ -11,7 +12,11 @@ import {
 import { get } from "svelte/store";
 
 import { TRIGGER_ON_OPEN, VIEW_TYPE_CALENDAR } from "src/constants";
-import { getDayDateFromFile, tryToCreateDailyNote } from "src/io/dailyNotes";
+import {
+  createDailyNoteFile,
+  getDayDateFromFile,
+  tryToCreateDailyNote,
+} from "src/io/dailyNotes";
 import { getDailyNotesForDate } from "src/io/dailyNoteIndex";
 import {
   getWeekDateFromFile,
@@ -59,6 +64,7 @@ export default class CalendarView extends ItemView {
   private calendar: CalendarComponent | null = null;
   private listPanel: ListPanelComponent | null = null;
   private modeAction: HTMLElement | null = null;
+  private navBar: HTMLElement | null = null;
   private sources: unknown[] = [];
   private plugin: CalendarPlugin;
   private settings: ISettings;
@@ -72,6 +78,11 @@ export default class CalendarView extends ItemView {
         "periodic-notes:settings-updated",
         this.onNoteSettingsUpdate
       )
+    );
+    // Moving the pane between a sidebar and the main area (or hiding view
+    // headers in the settings) changes which of the two controls is visible.
+    this.registerEvent(
+      this.app.workspace.on("layout-change", this.syncNavBarVisibility)
     );
     this.registerEvent(this.app.vault.on("create", this.onFileCreated));
     this.registerEvent(this.app.vault.on("delete", this.onFileDeleted));
@@ -90,6 +101,7 @@ export default class CalendarView extends ItemView {
       if (this.calendar) {
         this.calendar.tick();
       }
+      this.syncNavBarVisibility();
     });
   }
 
@@ -113,7 +125,7 @@ export default class CalendarView extends ItemView {
   onOpen(): Promise<void> {
     this.contentEl.addClass("calendar-hub-view-content");
     this.modeAction = this.addAction(
-      "list",
+      "layout-list",
       "Switch to list view",
       this.toggleMode
     );
@@ -144,6 +156,23 @@ export default class CalendarView extends ItemView {
     this.renderMode(next);
   };
 
+  /** Obsidian hides a pane's `.view-header` — and with it the `addAction`
+   *  icons — inside the sidebars, so the in-content toolbar stands in for it
+   *  there. Whenever the header is actually visible, that toolbar would be a
+   *  second copy of the same control, so it stays hidden. */
+  private syncNavBarVisibility = (): void => {
+    if (!this.navBar) {
+      return;
+    }
+    const header = this.containerEl.querySelector(".view-header");
+    const headerVisible =
+      header !== null && getComputedStyle(header).display !== "none";
+    this.navBar.classList.toggle(
+      "calendar-hub-nav-hidden",
+      headerVisible || !this.settings?.shouldShowViewSwitcher
+    );
+  };
+
   private destroyModeComponents(): void {
     this.calendar?.$destroy();
     this.calendar = null;
@@ -157,12 +186,11 @@ export default class CalendarView extends ItemView {
     this.destroyModeComponents();
     this.contentEl.empty();
 
-    // Sidebars hide the view header (and its actions), so the flip control
-    // lives in a standard nav-header, the same idiom as the file explorer's
-    // buttons — themes style it consistently (Cupertino, for one, collapses
-    // it until the pane is hovered).
-    const navButton = this.contentEl
-      .createDiv("nav-header calendar-hub-nav")
+    // Sidebars hide the view header (and with it the action icons), so the
+    // flip control is mirrored into the pane. Where the header is visible the
+    // mirror is redundant and is kept collapsed by syncNavBarVisibility().
+    this.navBar = this.contentEl.createDiv("nav-header calendar-hub-nav");
+    const navButton = this.navBar
       .createDiv("nav-buttons-container")
       .createDiv({
         cls: "clickable-icon nav-action-button",
@@ -173,8 +201,9 @@ export default class CalendarView extends ItemView {
               : "Switch to calendar view",
         },
       });
-    setIcon(navButton, mode === "calendar" ? "list" : "calendar");
+    setIcon(navButton, mode === "calendar" ? "layout-list" : "calendar-days");
     navButton.addEventListener("click", this.toggleMode);
+    this.syncNavBarVisibility();
 
     if (mode === "list") {
       this.listPanel = new ListPanel({
@@ -192,6 +221,7 @@ export default class CalendarView extends ItemView {
         props: {
           onClickDay: this.openOrCreateDailyNote,
           onClickWeek: this.openOrCreateWeeklyNote,
+          onCreateDayNote: this.createDayNote,
           onHoverDay: this.onHoverDay,
           onHoverWeek: this.onHoverWeek,
           onContextMenuDay: this.onContextMenuDay,
@@ -205,7 +235,10 @@ export default class CalendarView extends ItemView {
     if (this.modeAction) {
       const title =
         mode === "calendar" ? "Switch to list view" : "Switch to calendar view";
-      setIcon(this.modeAction, mode === "calendar" ? "list" : "calendar");
+      setIcon(
+        this.modeAction,
+        mode === "calendar" ? "layout-list" : "calendar-days"
+      );
       this.modeAction.setAttribute("aria-label", title);
     }
   }
@@ -492,6 +525,19 @@ export default class CalendarView extends ItemView {
   private getDailyNotes(date: Moment): TFile[] {
     return getDailyNotesForDate(date, get(dailyNotesByDate), get(dailyNotes));
   }
+
+  /** Explicit "New note" action for the day shown in the agenda panel: unlike
+   *  clicking the date (which opens the note when there is exactly one), this
+   *  always creates another note, letting `createDailyNoteFile` pick the next
+   *  free name ("2026-10-21", then "2026-10-21 (1)", ...). */
+  private createDayNote = (date: Moment): void => {
+    void createDailyNoteFile(date)
+      .then((file) => this.openDailyNoteFile(file, false))
+      .catch((err) => {
+        console.error("[Calendar Hub] Failed to create daily note", err);
+        new Notice("Unable to create the daily note.");
+      });
+  };
 
   private refreshCustomDailyNoteIndex(file: TAbstractFile): boolean {
     if (

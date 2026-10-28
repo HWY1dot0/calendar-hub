@@ -17,6 +17,7 @@ jest.mock("../stores", () => ({
   dailyNotesByDate: {},
   weeklyNotes: {},
   weeklyNotesByDate: {},
+  settings: {},
 }));
 
 describe("noteCountSource", () => {
@@ -32,7 +33,12 @@ describe("noteCountSource", () => {
     expect(getNoteCountAsDots(0)).toEqual([]);
   });
 
-  it("limits note count dots to five", () => {
+  it("limits note count dots to five by default", () => {
     expect(getNoteCountAsDots(8)).toHaveLength(5);
+  });
+
+  it("honors a custom dot limit", () => {
+    expect(getNoteCountAsDots(8, 5)).toHaveLength(5);
+    expect(getNoteCountAsDots(2, 1)).toHaveLength(1);
   });
 });
