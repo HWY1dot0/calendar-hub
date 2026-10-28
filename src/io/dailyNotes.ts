@@ -1,5 +1,5 @@
-import type { Moment } from "../obsidian-moment";
-import { TFile, TFolder, Vault, normalizePath } from "obsidian";
+import type { DurationUnit, Moment } from "../obsidian-moment";
+import { Notice, TFile, TFolder, Vault, normalizePath } from "obsidian";
 import {
   createDailyNote,
   getDailyNoteSettings,
@@ -51,6 +51,114 @@ export function getAllDailyNotes(): Record<string, TFile> {
   });
 
   return dailyNotes;
+}
+
+async function ensureNoteFolder(path: string): Promise<void> {
+  const folders = path.split("/").slice(0, -1).filter(Boolean);
+  let current = "";
+  for (const folder of folders) {
+    current = current ? `${current}/${folder}` : folder;
+    if (!window.app.vault.getAbstractFileByPath(current)) {
+      await window.app.vault.createFolder(current);
+    }
+  }
+}
+
+async function getDailyTemplateContents(template: string): Promise<string> {
+  const { metadataCache, vault } = window.app;
+  const templatePath = normalizePath(template);
+  if (templatePath === "/") {
+    return "";
+  }
+  try {
+    const templateFile = metadataCache.getFirstLinkpathDest(templatePath, "");
+    return templateFile ? await vault.cachedRead(templateFile) : "";
+  } catch (err) {
+    console.error(
+      `[Calendar Hub] Failed to read the daily note template '${templatePath}'`,
+      err
+    );
+    new Notice("Failed to read the daily note template");
+    return "";
+  }
+}
+
+/** Mirrors the daily-note template substitutions of
+ *  `obsidian-daily-notes-interface`, so a suffixed note starts with the same
+ *  content as the standard daily note. */
+function renderDailyTemplate(
+  templateContents: string,
+  date: Moment,
+  filename: string,
+  format: string
+): string {
+  return templateContents
+    // {{date}} must stay a real date for properties and queries; only
+    // {{title}} carries the numbered suffix the new note was saved under.
+    .replace(/{{\s*date\s*}}/gi, date.format(format))
+    .replace(/{{\s*time\s*}}/gi, window.moment().format("HH:mm"))
+    .replace(/{{\s*title\s*}}/gi, filename)
+    .replace(
+      /{{\s*(date|time)\s*(([+-]\d+)([yqmwdhs]))?\s*(:.+?)?}}/gi,
+      (
+        _: string,
+        _timeOrDate: string,
+        calc: string,
+        timeDelta: string,
+        unit: string,
+        momentFormat: string
+      ) => {
+        const now = window.moment();
+        const currentDate = date.clone().set({
+          hour: now.get("hour"),
+          minute: now.get("minute"),
+          second: now.get("second"),
+        });
+        if (calc) {
+          currentDate.add(parseInt(timeDelta, 10), unit as DurationUnit);
+        }
+        if (momentFormat) {
+          return currentDate.format(momentFormat.substring(1).trim());
+        }
+        return currentDate.format(format);
+      }
+    )
+    .replace(
+      /{{\s*yesterday\s*}}/gi,
+      date.clone().subtract(1, "day").format(format)
+    )
+    .replace(
+      /{{\s*tomorrow\s*}}/gi,
+      date.clone().add(1, "d").format(format)
+    );
+}
+
+/**
+ * Create a daily note for `date`, applying the configured daily-note template.
+ * The standard name is used when free; further notes for the same day are
+ * numbered "2026-10-24 (1)", "2026-10-24 (2)", ... so repeated clicks never
+ * fail and never ask for a name.
+ */
+export async function createDailyNoteFile(date: Moment): Promise<TFile> {
+  const { vault } = window.app;
+  const { folder, format, template } = getDailyNoteSettings();
+  const baseName = date.format(format);
+  const notePath = (name: string): string =>
+    normalizePath([folder, `${name}.md`].filter(Boolean).join("/"));
+
+  let name = baseName;
+  let path = notePath(name);
+  for (let index = 1; vault.getAbstractFileByPath(path); index += 1) {
+    name = `${baseName} (${index})`;
+    path = notePath(name);
+  }
+
+  await ensureNoteFolder(path);
+  const templateContents = await getDailyTemplateContents(template);
+  return vault.create(
+    path,
+    renderDailyTemplate(templateContents, date, name, format)
+  );
 }
 
 /**

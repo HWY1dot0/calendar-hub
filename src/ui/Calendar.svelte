@@ -68,6 +68,7 @@
     date: Moment,
     isMetaPressed: boolean
   ) => Promise<void>;
+  export let onCreateDayNote: (date: Moment) => void;
   export let onClickWeek: (
     date: Moment,
     isMetaPressed: boolean
@@ -170,6 +171,12 @@
     void onOpenDayNote(file, event.metaKey || event.ctrlKey);
   }
 
+  function handleCreateDayNote(): void {
+    if (selectedDate) {
+      onCreateDayNote(selectedDate.clone());
+    }
+  }
+
   function formatNoteCount(count: number): string {
     return `${count} note${count === 1 ? "" : "s"}`;
   }
@@ -199,6 +206,17 @@
         {formatNoteCount(selectedNotes.length)}
       </span>
     </div>
+
+    {#if selectionMode === "day" && selectedDate}
+      <button
+        class="calendar-note-create"
+        type="button"
+        title="Create another note for this day"
+        on:click={handleCreateDayNote}
+      >
+        + New note
+      </button>
+    {/if}
 
     {#if selectedNotes.length}
       <ul class="calendar-note-list">

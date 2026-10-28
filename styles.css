@@ -113,6 +113,35 @@
   padding: 4px 0;
 }
 
+.calendar-note-create {
+  align-items: center;
+  background: transparent;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 4px;
+  box-shadow: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  flex-shrink: 0;
+  font: inherit;
+  font-size: 12px;
+  height: auto;
+  justify-content: center;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  width: 100%;
+}
+
+.calendar-note-create:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.calendar-note-create:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
 .calendar-filter-panel {
   border-top: 1px solid var(--background-modifier-border);
   margin-top: 10px;
@@ -254,8 +283,22 @@
   min-height: 0;
 }
 
-.calendar-hub-nav {
+/* In-content stand-in for the view header's action icons, which Obsidian
+   hides inside the sidebars. It is hidden again whenever the real header is
+   visible, so the control never appears twice. */
+.nav-header.calendar-hub-nav {
   flex-shrink: 0;
+  padding: var(--size-2-2) var(--size-4-2) 0;
+}
+
+/* A lone button is centered by Obsidian's default flex rules; pane actions
+   belong on the right, matching the view header's own buttons. */
+.calendar-hub-nav .nav-buttons-container {
+  justify-content: flex-end;
+}
+
+.calendar-hub-nav.calendar-hub-nav-hidden {
+  display: none;
 }
 
 .calendar-hub-list-panel {
