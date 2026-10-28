@@ -158,6 +158,10 @@ Calendar Hub uses its own plugin id, `calendar-hub`, so it can be installed sepa
 
 Two of Liam Cain's MIT-licensed libraries are vendored unmodified (published build artifacts) under `vendor/`, each with its license and provenance header: [obsidian-calendar-ui](https://github.com/liamcain/obsidian-calendar-ui) 0.3.12 and [obsidian-daily-notes-interface](https://github.com/liamcain/obsidian-daily-notes-interface) 0.9.0. Vendoring keeps the plugin free of runtime npm dependencies.
 
+## Contributors
+
+Thanks to [@yszhou2019](https://github.com/yszhou2019) for contributing same-day note creation with automatically numbered filenames, configurable note-count dots, and view-switcher improvements in [PR #5](https://github.com/HWY1dot0/calendar-hub/pull/5), released in version 0.2.4.
+
 ## Development
 
 ```bash

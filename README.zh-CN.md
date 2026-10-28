@@ -124,6 +124,10 @@ Calendar Hub 使用独立的插件 id `calendar-hub`，因此可以和原版 Cal
 
 Liam Cain 的两个 MIT 许可库以未修改的形式（已发布的构建产物）内置在 `vendor/` 目录下，各自带有许可与来源说明头：[obsidian-calendar-ui](https://github.com/liamcain/obsidian-calendar-ui) 0.3.12 与 [obsidian-daily-notes-interface](https://github.com/liamcain/obsidian-daily-notes-interface) 0.9.0。内置这两个库是为了让插件运行时不依赖任何 npm 包。
 
+## 贡献者致谢
+
+感谢 [@yszhou2019](https://github.com/yszhou2019) 在 [PR #5](https://github.com/HWY1dot0/calendar-hub/pull/5) 中贡献同一天新建多篇笔记及文件名自动编号、可配置的笔记数量圆点，以及视图切换按钮改进。这些功能已随 0.2.4 版本发布。
+
 ## 开发
 
 ```bash
