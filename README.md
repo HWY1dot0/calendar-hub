@@ -47,10 +47,20 @@ once you are happy.
 
 ## The calendar
 
-- Click a day to list **every** note dated to it, whatever folder it lives in; open any of them,
-  or manage them from the panel below the calendar.
-- Note-count dots show how many matching notes each day has, at a glance.
-- Daily and weekly notes keep working exactly as in the original Calendar.
+- Click a day to update the note list below the calendar. If one note matches, it opens
+  directly; if several match, choose one from the list. If none match, the daily-note creation
+  flow runs, respecting **Confirm before creating new note**.
+- Use **+ New note** at the top of the selected day's list to create and open another note
+  immediately, without a confirmation dialog. Notes use your Daily Notes or Periodic Notes
+  folder, filename format, and template: for example, `2026-10-28.md`, then
+  `2026-10-28 (1).md`, `2026-10-28 (2).md`, and so on. Template `{{date}}` stays a date;
+  `{{title}}` includes the numbered suffix.
+- Keep **Detect daily notes in all folders** enabled (the default) to include numbered notes
+  in the index, and make sure the daily-note folder is within your scan scope. With this
+  setting off, only exact daily-note filenames are indexed, so numbered notes will not appear.
+- Note-count dots show how many matching notes each day has. Set the cap from 1 to 5 with
+  **Maximum dots per day** (default: 5); the note list still shows every match.
+- Weekly-note support remains available through the week-number setting.
 
 ## The List view
 
@@ -60,15 +70,17 @@ header. Today's branch starts expanded, and clicking a note opens it.
 
 It has two homes:
 
-- **In the sidebar**: the button row at the top of the calendar pane flips the same pane into
-  the list and back (the row is styled like the file explorer's buttons — some themes reveal it
-  when you hover the top of the pane). The mode you choose is remembered.
+- **In the Calendar Hub pane**: the right-aligned button at the top of the sidebar flips
+  the same pane into the list and back. When you move the pane to the main workspace, use
+  the view-header button instead; the extra in-pane toolbar is hidden while the header is
+  visible. Some themes reveal sidebar buttons only on hover. The mode you choose is remembered.
 - **As its own tab**: run the **Open list view** command and drag the tab anywhere — including
   the main workspace for full-height browsing.
 
 The list also carries its own **Filter folders** lens: the same checkbox tree as the scan scope,
 applied instantly and cleared with one click. Focus the list on `30 Macro` for a quarter-by-
-quarter read-through without touching what the calendar indexes.
+quarter read-through without touching what the calendar indexes. If a note appears on the
+calendar but not in the list, check this list-specific filter.
 
 ## Folder filtering
 
@@ -111,8 +123,8 @@ in different timezones.
 - **Frontmatter date fields**: Choose fields such as `date`, `daily_date`, or `calendar.date`. When a note has several date fields, they are tried in the order you list them and the first valid date wins — put the field you trust most first.
 - **Date format inside daily note filenames**: Pick common formats from the dropdown, or add comma-separated formats by hand, such as `YYYYMMDD` or `YYYYMMDDTHHmmssZZ`.
 - **Use file creation date fallback**: Map notes without any declared date to the day the file was created on disk.
-- **Note count dots**: Solid dots show how many matching notes exist for the day, up to 5 dots.
-- **Confirm before creating new note**: Ask before creating a new Daily Note.
+- **Maximum dots per day**: Choose 1–5 note-count dots (default: 5). The cap also applies to weekly note-count dots and never limits the notes shown in the list.
+- **Confirm before creating new note**: Ask before creating a note by clicking an empty date or week number. The explicit **+ New note** button always creates immediately.
 - **Show week number**: Show week numbers and keep legacy weekly-note behavior.
 
 ## Installation
@@ -121,7 +133,7 @@ Calendar Hub is available in the Obsidian **Community Plugins** directory:
 
 1. Open **Settings → Community plugins → Browse**.
 2. Search for **Calendar Hub** and install it.
-3. Enable it, then open the view from the ribbon icon or the **Open calendar view** command.
+3. Enable it. The Calendar Hub pane is created in the right sidebar; use the **Open calendar view** command to reveal it.
 
 <details>
 <summary>Manual or beta install</summary>
@@ -135,9 +147,9 @@ a [release](https://github.com/HWY1dot0/calendar-hub/releases) and copy them int
 
 ## Commands
 
-- **Open calendar view**: Opens the Calendar Hub sidebar view.
+- **Open calendar view**: Reveals the Calendar Hub pane, creating it in the right sidebar if needed, and returns it to calendar mode if it was showing the list.
 - **Open list view**: Opens the standalone List view (right sidebar by default; drag it anywhere).
-- **Reveal active note in calendar**: Moves the calendar to the month for the active date-based note (flips the pane back to the calendar first if it is showing the list).
+- **Reveal active note in calendar**: Moves the calendar to the month for an active note whose filename exactly matches the configured daily- or weekly-note format (flips the pane back to the calendar first if it is showing the list).
 - **Open weekly note**: Opens or creates the current weekly note when legacy weekly-note support is enabled.
 
 ## Compatibility
