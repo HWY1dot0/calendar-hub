@@ -167,10 +167,7 @@ export default class CalendarView extends ItemView {
     const header = this.containerEl.querySelector(".view-header");
     const headerVisible =
       header !== null && getComputedStyle(header).display !== "none";
-    this.navBar.classList.toggle(
-      "calendar-hub-nav-hidden",
-      headerVisible || !this.settings?.shouldShowViewSwitcher
-    );
+    this.navBar.classList.toggle("calendar-hub-nav-hidden", headerVisible);
   };
 
   private destroyModeComponents(): void {

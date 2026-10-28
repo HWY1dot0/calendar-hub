@@ -94,10 +94,7 @@ export default class ListView extends ItemView {
     const header = this.containerEl.querySelector(".view-header");
     const headerVisible =
       header !== null && getComputedStyle(header).display !== "none";
-    this.navBar.classList.toggle(
-      "calendar-hub-nav-hidden",
-      headerVisible || this.plugin.options?.shouldShowViewSwitcher === false
-    );
+    this.navBar.classList.toggle("calendar-hub-nav-hidden", headerVisible);
   };
 
   private openNote = async (
