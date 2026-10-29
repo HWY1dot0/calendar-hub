@@ -24,6 +24,7 @@ import type CalendarPlugin from "./main";
 export interface ISettings {
   wordsPerDot: number;
   maxNoteDots: number;
+  shouldShowViewSwitcher: boolean;
   weekStart: IWeekStartOption;
   shouldConfirmBeforeCreate: boolean;
   shouldIndexDailyNotesInAllFolders: boolean;
@@ -79,6 +80,7 @@ export const defaultSettings: Readonly<ISettings> = Object.freeze({
 
   wordsPerDot: DEFAULT_WORDS_PER_DOT,
   maxNoteDots: DEFAULT_MAX_NOTE_DOTS,
+  shouldShowViewSwitcher: true,
 
   showWeeklyNote: false,
   weeklyNoteFormat: "",
@@ -142,6 +144,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
     this.addWeekStartSetting();
     this.addMaxNoteDotsSetting();
     this.addConfirmCreateSetting();
+    this.addShowViewSwitcherSetting();
 
     // Ordered like the matching pipeline: master switch, folder scope, then
     // the date sources in precedence order (frontmatter > filename > ctime).
@@ -233,6 +236,22 @@ export class CalendarSettingsTab extends PluginSettingTab {
         toggle.onChange(async (value) => {
           await this.plugin.writeOptions(() => ({
             shouldConfirmBeforeCreate: value,
+          }));
+        });
+      });
+  }
+
+  addShowViewSwitcherSetting(): void {
+    new Setting(this.containerEl)
+      .setName("Show view switcher in sidebar pane")
+      .setDesc(
+        "Show the calendar/list switch at the top of the pane when it is docked in a sidebar. Turn it off for a cleaner pane; the \"Open list view\" and \"Open calendar view\" commands still work."
+      )
+      .addToggle((toggle) => {
+        toggle.setValue(this.plugin.options.shouldShowViewSwitcher);
+        toggle.onChange(async (value) => {
+          await this.plugin.writeOptions(() => ({
+            shouldShowViewSwitcher: value,
           }));
         });
       });
