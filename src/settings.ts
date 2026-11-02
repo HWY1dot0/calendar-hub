@@ -26,6 +26,7 @@ export interface ISettings {
   maxNoteDots: number;
   shouldShowViewSwitcher: boolean;
   weekStart: IWeekStartOption;
+  shouldCreateNoteOnClick: boolean;
   shouldConfirmBeforeCreate: boolean;
   shouldIndexDailyNotesInAllFolders: boolean;
   dailyNoteFilenameDateFormat: string;
@@ -65,6 +66,7 @@ const weekdays = [
 ];
 
 export const defaultSettings: Readonly<ISettings> = Object.freeze({
+  shouldCreateNoteOnClick: true,
   shouldConfirmBeforeCreate: true,
   shouldIndexDailyNotesInAllFolders: true,
   dailyNoteFilenameDateFormat: "",
@@ -143,6 +145,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
 
     this.addWeekStartSetting();
     this.addMaxNoteDotsSetting();
+    this.addCreateOnClickSetting();
     this.addConfirmCreateSetting();
     this.addShowViewSwitcherSetting();
 
@@ -227,6 +230,22 @@ export class CalendarSettingsTab extends PluginSettingTab {
       });
   }
 
+  addCreateOnClickSetting(): void {
+    new Setting(this.containerEl)
+      .setName("Create note when clicking an empty date")
+      .setDesc(
+        "Clicking a date or week number with no notes starts creating one. Turn it off to only select it; the \"+ New note\" button and the \"Open weekly note\" command still create notes."
+      )
+      .addToggle((toggle) => {
+        toggle.setValue(this.plugin.options.shouldCreateNoteOnClick);
+        toggle.onChange(async (value) => {
+          await this.plugin.writeOptions(() => ({
+            shouldCreateNoteOnClick: value,
+          }));
+        });
+      });
+  }
+
   addConfirmCreateSetting(): void {
     new Setting(this.containerEl)
       .setName("Confirm before creating new note")
@@ -245,7 +264,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName("Show view switcher in sidebar pane")
       .setDesc(
-        "Show the calendar/list switch at the top of the pane when it is docked in a sidebar. Turn it off for a cleaner pane; the \"Open list view\" and \"Open calendar view\" commands still work."
+        "Show the calendar/list switch at the top of the pane when it is docked in a sidebar. Turn it off for a cleaner pane; \"Open calendar view\" still flips the pane back to the calendar, and \"Open list view\" opens the list in its own tab."
       )
       .addToggle((toggle) => {
         toggle.setValue(this.plugin.options.shouldShowViewSwitcher);

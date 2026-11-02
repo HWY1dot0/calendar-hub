@@ -161,8 +161,9 @@ export default class CalendarView extends ItemView {
    *  there. Whenever the header is actually visible, that toolbar would be a
    *  second copy of the same control, so it stays hidden. The toolbar can also
    *  be turned off in the settings: a user who hides it has settled on one
-   *  view, so it stays hidden in both modes. The "Open list view" and "Open
-   *  calendar view" commands remain the way across. */
+   *  view, so it stays hidden in both modes. The "Open calendar view" command
+   *  still flips the pane back; "Open list view" opens the list in its own
+   *  tab. */
   private syncNavBarVisibility = (): void => {
     if (!this.navBar) {
       return;
@@ -223,7 +224,7 @@ export default class CalendarView extends ItemView {
         target: this.contentEl,
         props: {
           onClickDay: this.openOrCreateDailyNote,
-          onClickWeek: this.openOrCreateWeeklyNote,
+          onClickWeek: this.onClickWeek,
           onCreateDayNote: this.createDayNote,
           onHoverDay: this.onHoverDay,
           onHoverWeek: this.onHoverWeek,
@@ -469,13 +470,26 @@ export default class CalendarView extends ItemView {
     }
   }
 
+  /** A click may be opted out of creating; the "Open weekly note" command is an
+   *  explicit request and always creates. */
+  private onClickWeek = (date: Moment, inNewSplit: boolean): Promise<void> =>
+    this.openOrCreateWeeklyNote(
+      date,
+      inNewSplit,
+      this.settings.shouldCreateNoteOnClick
+    );
+
   openOrCreateWeeklyNote = async (
     date: Moment,
-    inNewSplit: boolean
+    inNewSplit: boolean,
+    allowCreate = true
   ): Promise<void> => {
     const existingFiles = this.getWeeklyNotes(date);
 
     if (!existingFiles.length) {
+      if (!allowCreate) {
+        return;
+      }
       const startOfWeek = date.clone().startOf("week");
       void tryToCreateWeeklyNote(
         startOfWeek,
@@ -507,6 +521,9 @@ export default class CalendarView extends ItemView {
     const existingFiles = this.getDailyNotes(date);
     if (!existingFiles.length) {
       // File doesn't exist
+      if (!this.settings.shouldCreateNoteOnClick) {
+        return;
+      }
       void tryToCreateDailyNote(
         date,
         inNewSplit,
