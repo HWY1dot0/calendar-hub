@@ -26,6 +26,7 @@ export interface ISettings {
   maxNoteDots: number;
   shouldShowViewSwitcher: boolean;
   weekStart: IWeekStartOption;
+  shouldCreateNoteOnClick: boolean;
   shouldConfirmBeforeCreate: boolean;
   shouldIndexDailyNotesInAllFolders: boolean;
   dailyNoteFilenameDateFormat: string;
@@ -65,6 +66,7 @@ const weekdays = [
 ];
 
 export const defaultSettings: Readonly<ISettings> = Object.freeze({
+  shouldCreateNoteOnClick: true,
   shouldConfirmBeforeCreate: true,
   shouldIndexDailyNotesInAllFolders: true,
   dailyNoteFilenameDateFormat: "",
@@ -143,6 +145,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
 
     this.addWeekStartSetting();
     this.addMaxNoteDotsSetting();
+    this.addCreateOnClickSetting();
     this.addConfirmCreateSetting();
     this.addShowViewSwitcherSetting();
 
@@ -222,6 +225,22 @@ export class CalendarSettingsTab extends PluginSettingTab {
         dropdown.onChange(async (value) => {
           await this.plugin.writeOptions(() => ({
             maxNoteDots: parseInt(value, 10),
+          }));
+        });
+      });
+  }
+
+  addCreateOnClickSetting(): void {
+    new Setting(this.containerEl)
+      .setName("Create note when clicking an empty date")
+      .setDesc(
+        "Clicking a date or week number with no notes starts creating one. Turn it off to only select it; the \"+ New note\" button and the \"Open weekly note\" command still create notes."
+      )
+      .addToggle((toggle) => {
+        toggle.setValue(this.plugin.options.shouldCreateNoteOnClick);
+        toggle.onChange(async (value) => {
+          await this.plugin.writeOptions(() => ({
+            shouldCreateNoteOnClick: value,
           }));
         });
       });

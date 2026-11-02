@@ -223,7 +223,7 @@ export default class CalendarView extends ItemView {
         target: this.contentEl,
         props: {
           onClickDay: this.openOrCreateDailyNote,
-          onClickWeek: this.openOrCreateWeeklyNote,
+          onClickWeek: this.onClickWeek,
           onCreateDayNote: this.createDayNote,
           onHoverDay: this.onHoverDay,
           onHoverWeek: this.onHoverWeek,
@@ -469,13 +469,26 @@ export default class CalendarView extends ItemView {
     }
   }
 
+  /** A click may be opted out of creating; the "Open weekly note" command is an
+   *  explicit request and always creates. */
+  private onClickWeek = (date: Moment, inNewSplit: boolean): Promise<void> =>
+    this.openOrCreateWeeklyNote(
+      date,
+      inNewSplit,
+      this.settings.shouldCreateNoteOnClick
+    );
+
   openOrCreateWeeklyNote = async (
     date: Moment,
-    inNewSplit: boolean
+    inNewSplit: boolean,
+    allowCreate = true
   ): Promise<void> => {
     const existingFiles = this.getWeeklyNotes(date);
 
     if (!existingFiles.length) {
+      if (!allowCreate) {
+        return;
+      }
       const startOfWeek = date.clone().startOf("week");
       void tryToCreateWeeklyNote(
         startOfWeek,
@@ -507,6 +520,9 @@ export default class CalendarView extends ItemView {
     const existingFiles = this.getDailyNotes(date);
     if (!existingFiles.length) {
       // File doesn't exist
+      if (!this.settings.shouldCreateNoteOnClick) {
+        return;
+      }
       void tryToCreateDailyNote(
         date,
         inNewSplit,

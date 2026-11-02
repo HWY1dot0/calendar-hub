@@ -49,7 +49,8 @@ once you are happy.
 
 - Click a day to update the note list below the calendar. If one note matches, it opens
   directly; if several match, choose one from the list. If none match, the daily-note creation
-  flow runs, respecting **Confirm before creating new note**.
+  flow runs, respecting **Confirm before creating new note**; with **Create note when clicking
+  an empty date** turned off, the day is only selected.
 - Use **+ New note** at the top of the selected day's list to create and open another note
   immediately, without a confirmation dialog. Notes use your Daily Notes or Periodic Notes
   folder, filename format, and template: for example, `2026-10-28.md`, then
@@ -126,6 +127,7 @@ in different timezones.
 - **Date format inside daily note filenames**: Pick common formats from the dropdown, or add comma-separated formats by hand, such as `YYYYMMDD` or `YYYYMMDDTHHmmssZZ`.
 - **Use file creation date fallback**: Map notes without any declared date to the day the file was created on disk.
 - **Maximum dots per day**: Choose 1–5 note-count dots (default: 5). The cap also applies to weekly note-count dots and never limits the notes shown in the list.
+- **Create note when clicking an empty date**: Start creating a note when you click a date or week number with no notes (default: on). Turn it off to only select it; the **+ New note** button and the **Open weekly note** command still create notes.
 - **Confirm before creating new note**: Ask before creating a note by clicking an empty date or week number. The explicit **+ New note** button always creates immediately.
 - **Show view switcher in sidebar pane**: Show the in-pane calendar/list switch when Calendar Hub is docked in a sidebar. Turn it off for a cleaner pane; the **Open list view** and **Open calendar view** commands still work.
 - **Show week number**: Show week numbers and keep legacy weekly-note behavior.
