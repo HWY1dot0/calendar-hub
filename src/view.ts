@@ -161,8 +161,9 @@ export default class CalendarView extends ItemView {
    *  there. Whenever the header is actually visible, that toolbar would be a
    *  second copy of the same control, so it stays hidden. The toolbar can also
    *  be turned off in the settings: a user who hides it has settled on one
-   *  view, so it stays hidden in both modes. The "Open list view" and "Open
-   *  calendar view" commands remain the way across. */
+   *  view, so it stays hidden in both modes. The "Open calendar view" command
+   *  still flips the pane back; "Open list view" opens the list in its own
+   *  tab. */
   private syncNavBarVisibility = (): void => {
     if (!this.navBar) {
       return;
