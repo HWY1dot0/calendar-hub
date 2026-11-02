@@ -1,9 +1,8 @@
 import type { DurationUnit, Moment } from "../obsidian-moment";
-import { Notice, TFile, TFolder, Vault, normalizePath } from "obsidian";
+import { Notice, TFile, normalizePath } from "obsidian";
 import {
   createDailyNote,
   getDailyNoteSettings,
-  getDateUID,
 } from "obsidian-daily-notes-interface";
 
 import type { ISettings } from "src/settings";
@@ -21,36 +20,6 @@ export function getDayDateFromFile(file: TFile): Moment | null {
   const format = getDailyNoteSettings().format.split("/").pop() ?? "";
   const noteDate = window.moment(file.basename, format, true);
   return noteDate.isValid() ? noteDate : null;
-}
-
-/**
- * Index every daily note by date UID. Self-contained replacement for
- * `getAllDailyNotes()` from `obsidian-daily-notes-interface`, so we no longer
- * import the library's `getDateFromFile` (which statically references the
- * legacy weekly-settings reader that reads the old "calendar" plugin).
- */
-export function getAllDailyNotes(): Record<string, TFile> {
-  const { vault } = window.app;
-  const { folder } = getDailyNoteSettings();
-
-  const dailyNotesFolder = folder
-    ? vault.getAbstractFileByPath(normalizePath(folder))
-    : vault.getRoot();
-  if (!(dailyNotesFolder instanceof TFolder)) {
-    throw new Error("Failed to find daily notes folder");
-  }
-
-  const dailyNotes: Record<string, TFile> = {};
-  Vault.recurseChildren(dailyNotesFolder, (note) => {
-    if (note instanceof TFile) {
-      const date = getDayDateFromFile(note);
-      if (date) {
-        dailyNotes[getDateUID(date, "day")] = note;
-      }
-    }
-  });
-
-  return dailyNotes;
 }
 
 async function ensureNoteFolder(path: string): Promise<void> {

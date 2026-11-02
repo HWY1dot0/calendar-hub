@@ -1,14 +1,16 @@
 import type { TFile } from "obsidian";
 import { get, writable } from "svelte/store";
 
+import { getDailyNoteSettings } from "obsidian-daily-notes-interface";
+
 import { defaultSettings, ISettings } from "src/settings";
 import {
   buildDailyNotesByDate,
   DailyNotesByDate,
   dailyNotesByDateToSingleNotes,
+  getDailyNoteScanScope,
   singleDailyNotesToDailyNotesByDate,
 } from "src/io/dailyNoteIndex";
-import { getAllDailyNotes } from "src/io/dailyNotes";
 import {
   buildWeeklyNotesByDate,
   getAllWeeklyNotes,
@@ -26,24 +28,24 @@ function createDailyNotesStore() {
   return {
     reindex: () => {
       try {
-        const shouldIndexAllFolders = get(
-          settings
-        ).shouldIndexDailyNotesInAllFolders;
-        const notesByDate = shouldIndexAllFolders
-          ? buildDailyNotesByDate(
-              window.app.vault.getMarkdownFiles(),
-              {
-                filenameDateFormat: get(settings).dailyNoteFilenameDateFormat,
-                frontmatterDateFields: get(settings)
-                  .shouldIndexDailyNotesFromFrontmatter
-                  ? get(settings).dailyNoteFrontmatterDateFields
-                  : "",
-                useCreationDateFallback: get(settings)
-                  .shouldIndexDailyNotesFromCreationDate,
-                includedFolders: get(settings).dailyNoteIncludedFolders,
-              }
-            )
-          : singleDailyNotesToDailyNotesByDate(getAllDailyNotes());
+        const currentSettings = get(settings);
+        const notesByDate = buildDailyNotesByDate(
+          window.app.vault.getMarkdownFiles(),
+          {
+            filenameDateFormat: currentSettings.dailyNoteFilenameDateFormat,
+            frontmatterDateFields:
+              currentSettings.shouldIndexDailyNotesFromFrontmatter
+                ? currentSettings.dailyNoteFrontmatterDateFields
+                : "",
+            useCreationDateFallback:
+              currentSettings.shouldIndexDailyNotesFromCreationDate,
+            includedFolders: getDailyNoteScanScope(
+              currentSettings.shouldIndexDailyNotesInAllFolders,
+              currentSettings.dailyNoteIncludedFolders,
+              getDailyNoteSettings().folder ?? ""
+            ),
+          }
+        );
         const dailyNotes = dailyNotesByDateToSingleNotes(notesByDate);
 
         store.set(dailyNotes);
@@ -52,10 +54,7 @@ function createDailyNotesStore() {
       } catch (err) {
         if (!hasError) {
           // Avoid error being shown multiple times
-          console.warn(
-            "[Calendar Hub] Failed to find daily notes folder",
-            err
-          );
+          console.warn("[Calendar Hub] Failed to index daily notes", err);
         }
         store.set({});
         dailyNotesByDate.set({});
