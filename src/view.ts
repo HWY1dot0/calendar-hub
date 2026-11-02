@@ -19,7 +19,6 @@ import {
 } from "src/io/dailyNotes";
 import { getDailyNotesForDate } from "src/io/dailyNoteIndex";
 import {
-  getWeekDateFromFile,
   getWeeklyNote,
   getWeeklyNotesForDate,
   getWeeklyNoteSettings,
@@ -316,89 +315,28 @@ export default class CalendarView extends ItemView {
   };
 
   private onFileDeleted = (file: TAbstractFile): void => {
-    const refreshedDaily = this.refreshCustomDailyNoteIndex(file);
-    if (!(file instanceof TFile)) {
-      return;
-    }
-    if (!refreshedDaily && getDayDateFromFile(file)) {
-      dailyNotes.reindex();
-      this.updateActiveFile();
-    }
-    if (
-      this.settings?.shouldIndexWeeklyNotesInAllFolders ||
-      getWeekDateFromFile(file)
-    ) {
-      weeklyNotes.reindex();
-      this.updateActiveFile();
-    }
+    this.refreshNoteIndexes(file);
   };
 
   private onFileModified = (file: TAbstractFile): void => {
-    const refreshedDaily = this.refreshCustomDailyNoteIndex(file);
-    if (!(file instanceof TFile)) {
-      return;
-    }
-    if (this.settings?.shouldIndexWeeklyNotesInAllFolders) {
-      weeklyNotes.reindex();
-      if (this.calendar) {
-        this.calendar.tick();
-      }
-      return;
-    }
-    if (refreshedDaily) {
-      return;
-    }
-    const date = getDayDateFromFile(file) || getWeekDateFromFile(file);
-    if (date && this.calendar) {
-      this.calendar.tick();
-    }
+    this.refreshNoteIndexes(file);
   };
 
   private onMetadataChanged = (file: TFile): void => {
     // vault "modify" fires before Obsidian re-parses the file's metadata, so
     // a frontmatter date edit reindexes against the stale cache and the note
     // stays on its old day. This event fires once the cache is fresh; skip it
-    // entirely when frontmatter dates are not used for matching.
-    if (this.settings?.shouldIndexDailyNotesFromFrontmatter) {
-      this.refreshCustomDailyNoteIndex(file);
-    }
+    // entirely when frontmatter is not used for matching.
     if (
-      this.settings?.shouldIndexWeeklyNotesInAllFolders &&
-      this.settings?.shouldIndexWeeklyNotesFromFrontmatter
+      this.settings?.dailyNoteFrontmatterDateFields.trim() ||
+      this.settings?.weeklyNoteFrontmatterDateFields.trim()
     ) {
-      weeklyNotes.reindex();
-      if (this.calendar) {
-        this.calendar.tick();
-      }
+      this.refreshNoteIndexes(file);
     }
   };
 
   private onFileCreated = (file: TAbstractFile): void => {
-    if (
-      !this.app.workspace.layoutReady ||
-      !(this.calendar || this.listPanel)
-    ) {
-      return;
-    }
-    const refreshedDaily = this.refreshCustomDailyNoteIndex(file);
-    if (!(file instanceof TFile)) {
-      return;
-    }
-    if (!refreshedDaily && getDayDateFromFile(file)) {
-      dailyNotes.reindex();
-      if (this.calendar) {
-        this.calendar.tick();
-      }
-    }
-    if (
-      this.settings?.shouldIndexWeeklyNotesInAllFolders ||
-      getWeekDateFromFile(file)
-    ) {
-      weeklyNotes.reindex();
-      if (this.calendar) {
-        this.calendar.tick();
-      }
-    }
+    this.refreshNoteIndexes(file);
   };
 
   private onFileRenamed = (file: TAbstractFile, oldPath: string): void => {
@@ -476,7 +414,7 @@ export default class CalendarView extends ItemView {
     this.openOrCreateWeeklyNote(
       date,
       inNewSplit,
-      this.settings.shouldCreateNoteOnClick
+      this.settings.emptyDateClick !== "select"
     );
 
   openOrCreateWeeklyNote = async (
@@ -521,7 +459,7 @@ export default class CalendarView extends ItemView {
     const existingFiles = this.getDailyNotes(date);
     if (!existingFiles.length) {
       // File doesn't exist
-      if (!this.settings.shouldCreateNoteOnClick) {
+      if (this.settings.emptyDateClick === "select") {
         return;
       }
       void tryToCreateDailyNote(
@@ -559,21 +497,24 @@ export default class CalendarView extends ItemView {
       });
   };
 
-  private refreshCustomDailyNoteIndex(file: TAbstractFile): boolean {
+  /** Rebuilds both indexes after a Markdown file changes. Any note can move
+   *  between days or weeks, so there is no cheaper per-file check; a pane that
+   *  is not showing anything reindexes when it opens instead. */
+  private refreshNoteIndexes(file: TAbstractFile): void {
     if (
       !this.app.workspace.layoutReady ||
       !(this.calendar || this.listPanel) ||
       !this.isMarkdownFile(file)
     ) {
-      return false;
+      return;
     }
 
     dailyNotes.reindex();
+    weeklyNotes.reindex();
     this.updateActiveFile();
     if (this.calendar) {
       this.calendar.tick();
     }
-    return true;
   }
 
   private isMarkdownFile(file: TAbstractFile): file is TFile {

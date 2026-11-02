@@ -53,8 +53,7 @@ regardless of folder, so it enumerates notes by default. It uses the narrowest
 API that serves this — `vault.getMarkdownFiles()` (see `src/ui/stores.ts`), which
 returns only Markdown notes, never `getFiles()` (which would also expose images,
 PDFs and other attachments). Users can narrow the scope with the "Folders to
-scan" setting, or turn off cross-folder indexing entirely with the "Detect notes
-in all folders" toggle. No file contents leave the vault — the plugin performs no
+scan" setting, down to a single folder. No file contents leave the vault — the plugin performs no
 network egress (the only `http://` strings in the bundle are
 `http://www.w3.org/2000/svg` namespace declarations).
 

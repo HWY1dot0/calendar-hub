@@ -195,7 +195,7 @@
   bind:displayedMonth
   localeData={today.localeData()}
   selectedId={$activeFile}
-  showWeekNums={$settings.showWeeklyNote}
+  showWeekNums={$settings.showWeekNumbers}
 />
 
 {#if hasSelection}

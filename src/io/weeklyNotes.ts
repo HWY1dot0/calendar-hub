@@ -1,5 +1,5 @@
 import type { DurationUnit, Moment } from "../obsidian-moment";
-import { Notice, TFile, TFolder, Vault, normalizePath } from "obsidian";
+import { Notice, TFile, normalizePath } from "obsidian";
 import { getDateUID } from "obsidian-daily-notes-interface";
 
 import { DEFAULT_WEEK_FORMAT, PLUGIN_ID } from "src/constants";
@@ -12,7 +12,6 @@ import type { ISettings } from "src/settings";
 import { createConfirmationDialog } from "src/ui/modal";
 
 export interface WeeklyIndexOptions {
-  filenameDateFormat?: string;
   frontmatterDateFields?: string;
   includedFolders?: string;
 }
@@ -109,7 +108,6 @@ export function buildWeeklyNotesByDate(
   return buildNotesByDate(files, {
     format: getWeeklyNoteSettings().format,
     granularity: "week",
-    filenameDateFormat: options.filenameDateFormat,
     frontmatterDateFields: options.frontmatterDateFields,
     includedFolders: options.includedFolders,
   });
@@ -132,30 +130,6 @@ export function getWeeklyNotesForDate(
 
   const note = getWeeklyNote(date, fallback ?? {});
   return note ? [note] : [];
-}
-
-export function getAllWeeklyNotes(): Record<string, TFile> {
-  const { vault } = window.app;
-  const { folder } = getWeeklyNoteSettings();
-
-  const weeklyNotesFolder = folder
-    ? vault.getAbstractFileByPath(normalizePath(folder))
-    : vault.getRoot();
-  if (!(weeklyNotesFolder instanceof TFolder)) {
-    throw new Error("Failed to find weekly notes folder");
-  }
-
-  const weeklyNotes: Record<string, TFile> = {};
-  Vault.recurseChildren(weeklyNotesFolder, (note) => {
-    if (note instanceof TFile) {
-      const date = getWeekDateFromFile(note);
-      if (date) {
-        weeklyNotes[getDateUID(date, "week")] = note;
-      }
-    }
-  });
-
-  return weeklyNotes;
 }
 
 async function ensureFolderExists(path: string): Promise<void> {
@@ -290,7 +264,7 @@ export async function tryToCreateWeeklyNote(
     cb?.(weeklyNote);
   };
 
-  if (settings.shouldConfirmBeforeCreate) {
+  if (settings.emptyDateClick === "confirm") {
     createConfirmationDialog({
       cta: "Create",
       onAccept: createFile,

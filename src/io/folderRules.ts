@@ -24,8 +24,16 @@ export function parseFolderRules(value: string): FolderRule[] {
 
 export function serializeFolderRules(rules: FolderRule[]): string {
   return rules
-    .map((rule) => (rule.excluded ? `-${rule.path}` : rule.path))
+    .map((rule) => {
+      const path = rule.path || "/";
+      return rule.excluded ? `-${path}` : path;
+    })
     .join(", ");
+}
+
+/** Prefix matching every path inside `folderPath`; the root contains all. */
+function subtreePrefix(folderPath: string): string {
+  return folderPath === "" ? "" : `${folderPath}/`;
 }
 
 function normalizeFolderPath(path: string): string {
@@ -111,9 +119,12 @@ export function getFolderCheckState(
   rules: FolderRule[]
 ): FolderCheckState {
   const included = isFolderIncluded(folderPath, rules);
-  const prefix = `${folderPath}/`;
+  const prefix = subtreePrefix(folderPath);
   const mixed = rules.some(
-    (rule) => rule.path.startsWith(prefix) && rule.excluded === included
+    (rule) =>
+      rule.path !== folderPath &&
+      rule.path.startsWith(prefix) &&
+      rule.excluded === included
   );
   if (mixed) {
     return "partial";
@@ -132,7 +143,12 @@ export function toggleFolderRule(
   rules: FolderRule[]
 ): FolderRule[] {
   const state = getFolderCheckState(folderPath, rules);
-  const prefix = `${folderPath}/`;
+  // The root has no ancestor to inherit from: ticked it clears every rule
+  // (blank already means the whole vault), unticked it is a lone exclusion.
+  if (folderPath === "") {
+    return state === "checked" ? [{ path: "", excluded: true }] : [];
+  }
+  const prefix = subtreePrefix(folderPath);
   const withoutSubtree = rules.filter(
     (rule) => rule.path !== folderPath && !rule.path.startsWith(prefix)
   );

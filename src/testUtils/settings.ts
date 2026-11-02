@@ -6,9 +6,8 @@ export function getDefaultSettings(
   return {
     ...defaultSettings,
     weekStart: "sunday",
-    shouldConfirmBeforeCreate: false,
-    wordsPerDot: 50,
-    showWeeklyNote: false,
+    emptyDateClick: "create",
+    showWeekNumbers: false,
     weeklyNoteFolder: "",
     weeklyNoteFormat: "",
     weeklyNoteTemplate: "",
