@@ -1,12 +1,15 @@
 import type { WeekSpec } from "./obsidian-moment";
 import { App, Plugin, WorkspaceLeaf } from "obsidian";
 
+import { getDailyNoteSettings } from "obsidian-daily-notes-interface";
+
 import { VIEW_TYPE_CALENDAR, VIEW_TYPE_LIST } from "./constants";
 import { dailyNotes, settings, weeklyNotes } from "./ui/stores";
 import {
   appHasPeriodicNotesPluginLoaded,
   CalendarSettingsTab,
   ISettings,
+  migrateSettings,
 } from "./settings";
 import ListView from "./listView";
 import CalendarView from "./view";
@@ -122,14 +125,10 @@ export default class CalendarPlugin extends Plugin {
   }
 
   async loadOptions(): Promise<void> {
-    const options = (await this.loadData()) as Partial<ISettings> | null;
-    settings.update((old) => {
-      return {
-        ...old,
-        ...(options || {}),
-      };
-    });
+    const saved = (await this.loadData()) as Partial<ISettings> | null;
+    settings.set(migrateSettings(saved, getDailyNoteSettings().folder ?? ""));
 
+    // Writes the migrated shape back, so data.json only holds live keys.
     await this.saveData(this.options);
   }
 

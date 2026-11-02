@@ -16,43 +16,44 @@ import FolderRuleTree from "src/ui/FolderRuleTree.svelte";
 import { appHasDailyNotesPluginLoaded } from "obsidian-daily-notes-interface";
 import type { ILocaleOverride, IWeekStartOption } from "obsidian-calendar-ui";
 
-import { DEFAULT_MAX_NOTE_DOTS, DEFAULT_WEEK_FORMAT, DEFAULT_WORDS_PER_DOT } from "src/constants";
+import { DEFAULT_MAX_NOTE_DOTS, DEFAULT_WEEK_FORMAT } from "src/constants";
 import type { ListGrouping, ListSortOrder } from "src/ui/listViewModel";
 
 import type CalendarPlugin from "./main";
 
-export interface ISettings {
-  wordsPerDot: number;
-  maxNoteDots: number;
-  shouldShowViewSwitcher: boolean;
-  weekStart: IWeekStartOption;
-  shouldCreateNoteOnClick: boolean;
-  shouldConfirmBeforeCreate: boolean;
-  shouldIndexDailyNotesInAllFolders: boolean;
-  dailyNoteFilenameDateFormat: string;
-  shouldIndexDailyNotesFromFrontmatter: boolean;
-  dailyNoteFrontmatterDateFields: string;
-  shouldIndexDailyNotesFromCreationDate: boolean;
-  dailyNoteIncludedFolders: string;
+/** What clicking a date or week number with no notes does. */
+export type EmptyDateClick = "create" | "confirm" | "select";
 
-  // List view
+export interface ISettings {
+  // General
+  weekStart: IWeekStartOption;
+  localeOverride: ILocaleOverride;
+  maxNoteDots: number;
+  emptyDateClick: EmptyDateClick;
+  shouldShowViewSwitcher: boolean;
+
+  // Folders: one scan scope shared by daily and weekly indexing. Blank is the
+  // whole vault; see folderRules.ts for the rule syntax.
+  includedFolders: string;
+
+  // Date matching. A blank frontmatter field list turns that source off.
+  dailyNoteFrontmatterDateFields: string;
+  dailyNoteFilenameDateFormat: string;
+  shouldIndexDailyNotesFromCreationDate: boolean;
+  weeklyNoteFrontmatterDateFields: string;
+
+  // Weekly notes: the week column, and how new weekly notes are created when
+  // Periodic Notes is not providing those settings.
+  showWeekNumbers: boolean;
+  weeklyNoteFormat: string;
+  weeklyNoteTemplate: string;
+  weeklyNoteFolder: string;
+
+  // List view state, remembered rather than configured.
   sidebarViewMode: "calendar" | "list";
   listGrouping: ListGrouping;
   listSortOrder: ListSortOrder;
   listFolderFilter: string;
-
-  // Weekly Note settings
-  showWeeklyNote: boolean;
-  weeklyNoteFormat: string;
-  weeklyNoteTemplate: string;
-  weeklyNoteFolder: string;
-  shouldIndexWeeklyNotesInAllFolders: boolean;
-  weeklyNoteFilenameDateFormat: string;
-  shouldIndexWeeklyNotesFromFrontmatter: boolean;
-  weeklyNoteFrontmatterDateFields: string;
-  weeklyNoteIncludedFolders: string;
-
-  localeOverride: ILocaleOverride;
 }
 
 const weekdays = [
@@ -66,36 +67,113 @@ const weekdays = [
 ];
 
 export const defaultSettings: Readonly<ISettings> = Object.freeze({
-  shouldCreateNoteOnClick: true,
-  shouldConfirmBeforeCreate: true,
-  shouldIndexDailyNotesInAllFolders: true,
+  weekStart: "locale",
+  localeOverride: "system-default",
+  maxNoteDots: DEFAULT_MAX_NOTE_DOTS,
+  emptyDateClick: "confirm",
+  shouldShowViewSwitcher: true,
+
+  includedFolders: "",
+
+  dailyNoteFrontmatterDateFields: "",
   dailyNoteFilenameDateFormat: "",
-  shouldIndexDailyNotesFromFrontmatter: false,
-  dailyNoteFrontmatterDateFields: "date, daily_date, calendar_date",
   shouldIndexDailyNotesFromCreationDate: false,
-  dailyNoteIncludedFolders: "",
+  weeklyNoteFrontmatterDateFields: "",
+
+  showWeekNumbers: false,
+  weeklyNoteFormat: "",
+  weeklyNoteTemplate: "",
+  weeklyNoteFolder: "",
+
   sidebarViewMode: "calendar",
   listGrouping: "month",
   listSortOrder: "desc",
   listFolderFilter: "",
-  weekStart: "locale",
-
-  wordsPerDot: DEFAULT_WORDS_PER_DOT,
-  maxNoteDots: DEFAULT_MAX_NOTE_DOTS,
-  shouldShowViewSwitcher: true,
-
-  showWeeklyNote: false,
-  weeklyNoteFormat: "",
-  weeklyNoteTemplate: "",
-  weeklyNoteFolder: "",
-  shouldIndexWeeklyNotesInAllFolders: true,
-  weeklyNoteFilenameDateFormat: "",
-  shouldIndexWeeklyNotesFromFrontmatter: false,
-  weeklyNoteFrontmatterDateFields: "week, weekly_date",
-  weeklyNoteIncludedFolders: "",
-
-  localeOverride: "system-default",
 });
+
+/** Settings keys from earlier releases, read once by `migrateSettings`. */
+interface LegacySettings {
+  wordsPerDot: number;
+  shouldCreateNoteOnClick: boolean;
+  shouldConfirmBeforeCreate: boolean;
+  shouldIndexDailyNotesInAllFolders: boolean;
+  dailyNoteIncludedFolders: string;
+  shouldIndexDailyNotesFromFrontmatter: boolean;
+  showWeeklyNote: boolean;
+  shouldIndexWeeklyNotesInAllFolders: boolean;
+  weeklyNoteIncludedFolders: string;
+  weeklyNoteFilenameDateFormat: string;
+  shouldIndexWeeklyNotesFromFrontmatter: boolean;
+}
+
+/**
+ * Turns whatever `data.json` holds into the current settings shape. Older
+ * keys are folded into their replacements so nobody has to reconfigure:
+ *
+ * - the two click booleans become one `emptyDateClick` choice;
+ * - "detect in all folders" off becomes a folder rule pinning the scan to the
+ *   Daily Notes folder (`dailyNoteFolder`, from the Daily Notes plugin);
+ * - a frontmatter toggle that was off blanks its field list, since a blank
+ *   list is how that source is turned off now;
+ * - weekly indexing shares the daily scan scope, so its own scope, extra
+ *   filename formats and "all folders" switch are dropped.
+ *
+ * Unknown keys are dropped, so `data.json` ends up holding only live settings.
+ */
+export function migrateSettings(
+  saved: Partial<ISettings & LegacySettings> | null,
+  dailyNoteFolder: string
+): ISettings {
+  const old = saved ?? {};
+  const next: ISettings = { ...defaultSettings };
+
+  (Object.keys(defaultSettings) as (keyof ISettings)[]).forEach((key) => {
+    if (old[key] !== undefined) {
+      (next as unknown as Record<string, unknown>)[key] = old[key];
+    }
+  });
+
+  if (old.emptyDateClick === undefined) {
+    if (old.shouldCreateNoteOnClick === false) {
+      next.emptyDateClick = "select";
+    } else if (old.shouldConfirmBeforeCreate === false) {
+      next.emptyDateClick = "create";
+    }
+  }
+
+  if (old.includedFolders === undefined) {
+    const folder = dailyNoteFolder.trim().replace(/^\/+|\/+$/g, "");
+    if (old.shouldIndexDailyNotesInAllFolders === false && folder) {
+      next.includedFolders = folder;
+    } else if (old.dailyNoteIncludedFolders !== undefined) {
+      next.includedFolders = old.dailyNoteIncludedFolders;
+    }
+  }
+
+  if (old.shouldIndexDailyNotesFromFrontmatter === false) {
+    next.dailyNoteFrontmatterDateFields = "";
+  } else if (
+    old.shouldIndexDailyNotesFromFrontmatter === true &&
+    old.dailyNoteFrontmatterDateFields === undefined
+  ) {
+    next.dailyNoteFrontmatterDateFields = "date, daily_date, calendar_date";
+  }
+
+  if (old.shouldIndexWeeklyNotesFromFrontmatter === false) {
+    next.weeklyNoteFrontmatterDateFields = "";
+  } else if (
+    old.shouldIndexWeeklyNotesFromFrontmatter === true &&
+    old.weeklyNoteFrontmatterDateFields === undefined
+  ) {
+    next.weeklyNoteFrontmatterDateFields = "week, weekly_date";
+  }
+
+  if (old.showWeekNumbers === undefined && old.showWeeklyNote !== undefined) {
+    next.showWeekNumbers = old.showWeeklyNote;
+  }
+
+  return next;
+}
 
 export function appHasPeriodicNotesPluginLoaded(): boolean {
   const periodicNotes = window.app.plugins.getPlugin("periodic-notes");
@@ -107,13 +185,12 @@ interface FolderRuleTreeComponent {
   $destroy(): void;
 }
 
-type SettingsSection = "general" | "folders" | "date-matching" | "weekly-notes";
+type SettingsSection = "general" | "folders" | "date-matching";
 
 const SETTINGS_SECTIONS: { id: SettingsSection; name: string }[] = [
   { id: "general", name: "General" },
   { id: "folders", name: "Folders" },
   { id: "date-matching", name: "Date matching" },
-  { id: "weekly-notes", name: "Weekly notes" },
 ];
 
 export class CalendarSettingsTab extends PluginSettingTab {
@@ -192,41 +269,29 @@ export class CalendarSettingsTab extends PluginSettingTab {
       this.addWeekStartSetting();
       this.addLocaleOverrideSetting();
       this.addMaxNoteDotsSetting();
-      this.addCreateOnClickSetting();
-      this.addConfirmCreateSetting();
+      this.addEmptyDateClickSetting();
       this.addShowViewSwitcherSetting();
-    } else if (section === "folders") {
-      this.addIndexDailyNotesInAllFoldersSetting();
-      // Folder rules only narrow a vault-wide scan; pinned to the Daily Notes
-      // folder there is nothing for them to narrow.
-      if (this.plugin.options.shouldIndexDailyNotesInAllFolders) {
-        this.addDailyNoteIncludedFoldersSetting();
-      }
-    } else if (section === "date-matching") {
-      // The date sources in precedence order (frontmatter > filename > ctime).
-      this.addIndexDailyNotesFromFrontmatterSetting();
-      this.addDailyNoteFrontmatterDateFieldsSetting();
-      this.addDailyNoteFilenameDateFormatSetting();
-      this.addIndexDailyNotesFromCreationDateSetting();
-    } else {
-      this.addShowWeeklyNoteSetting();
+      this.addShowWeekNumbersSetting();
 
+      // Periodic Notes owns weekly-note creation when its weekly notes are
+      // enabled; otherwise Calendar Hub needs to know where and how.
       if (
-        this.plugin.options.showWeeklyNote &&
+        this.plugin.options.showWeekNumbers &&
         !appHasPeriodicNotesPluginLoaded()
       ) {
-        this.panelEl.createEl("p", {
-          cls: "setting-item-description",
-          text:
-            "Weekly note support is kept for compatibility. For richer periodic notes, consider using the Periodic Notes plugin.",
-        });
+        new Setting(this.panelEl).setName("Weekly notes").setHeading();
         this.addWeeklyNoteFormatSetting();
         this.addWeeklyNoteTemplateSetting();
         this.addWeeklyNoteFolderSetting();
-        this.addIndexWeeklyNotesInAllFoldersSetting();
-        this.addWeeklyNoteIncludedFoldersSetting();
-        this.addWeeklyNoteFilenameDateFormatSetting();
-        this.addIndexWeeklyNotesFromFrontmatterSetting();
+      }
+    } else if (section === "folders") {
+      this.addIncludedFoldersSetting();
+    } else {
+      // The date sources in precedence order (frontmatter > filename > ctime).
+      this.addDailyNoteFrontmatterDateFieldsSetting();
+      this.addDailyNoteFilenameDateFormatSetting();
+      this.addIndexDailyNotesFromCreationDateSetting();
+      if (this.plugin.options.showWeekNumbers) {
         this.addWeeklyNoteFrontmatterDateFieldsSetting();
       }
     }
@@ -236,7 +301,12 @@ export class CalendarSettingsTab extends PluginSettingTab {
     const { moment } = window;
 
     const localizedWeekdays = moment.weekdays();
-    const localeWeekStartNum = window._bundledLocaleWeekSpec.dow;
+    // obsidian-calendar-ui stashes the locale's own week start in this global
+    // the first time a calendar renders, before applying the user's choice. If
+    // no calendar has rendered yet (sidebar collapsed, list mode), moment's
+    // locale data is still the untouched default.
+    const localeWeekStartNum =
+      window._bundledLocaleWeekSpec?.dow ?? moment.localeData().firstDayOfWeek();
     const localeWeekStart = moment.weekdays()[localeWeekStartNum];
 
     new Setting(this.panelEl)
@@ -253,6 +323,30 @@ export class CalendarSettingsTab extends PluginSettingTab {
         dropdown.onChange(async (value) => {
           await this.plugin.writeOptions(() => ({
             weekStart: value as IWeekStartOption,
+          }));
+        });
+      });
+  }
+
+  addLocaleOverrideSetting(): void {
+    const { moment } = window;
+
+    const sysLocale = navigator.language?.toLowerCase();
+
+    new Setting(this.panelEl)
+      .setName("Override locale:")
+      .setDesc(
+        "Set this if you want to use a locale different from the default"
+      )
+      .addDropdown((dropdown) => {
+        dropdown.addOption("system-default", `Same as system (${sysLocale})`);
+        moment.locales().forEach((locale) => {
+          dropdown.addOption(locale, locale);
+        });
+        dropdown.setValue(this.plugin.options.localeOverride);
+        dropdown.onChange(async (value) => {
+          await this.plugin.writeOptions(() => ({
+            localeOverride: value,
           }));
         });
       });
@@ -277,31 +371,20 @@ export class CalendarSettingsTab extends PluginSettingTab {
       });
   }
 
-  addCreateOnClickSetting(): void {
+  addEmptyDateClickSetting(): void {
     new Setting(this.panelEl)
-      .setName("Create note when clicking an empty date")
+      .setName("Clicking a date with no notes")
       .setDesc(
-        "Clicking a date or week number with no notes starts creating one. Turn it off to only select it; the \"+ New note\" button and the \"Open weekly note\" command still create notes."
+        "What happens when you click a date or week number that has no notes yet. The \"+ New note\" button and the \"Open weekly note\" command always create a note immediately."
       )
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.options.shouldCreateNoteOnClick);
-        toggle.onChange(async (value) => {
+      .addDropdown((dropdown) => {
+        dropdown.addOption("confirm", "Ask before creating a note");
+        dropdown.addOption("create", "Create a note");
+        dropdown.addOption("select", "Only select the date");
+        dropdown.setValue(this.plugin.options.emptyDateClick);
+        dropdown.onChange(async (value) => {
           await this.plugin.writeOptions(() => ({
-            shouldCreateNoteOnClick: value,
-          }));
-        });
-      });
-  }
-
-  addConfirmCreateSetting(): void {
-    new Setting(this.panelEl)
-      .setName("Confirm before creating new note")
-      .setDesc("Show a confirmation modal before creating a new note")
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.options.shouldConfirmBeforeCreate);
-        toggle.onChange(async (value) => {
-          await this.plugin.writeOptions(() => ({
-            shouldConfirmBeforeCreate: value,
+            emptyDateClick: value as EmptyDateClick,
           }));
         });
       });
@@ -323,19 +406,112 @@ export class CalendarSettingsTab extends PluginSettingTab {
       });
   }
 
-  addIndexDailyNotesInAllFoldersSetting(): void {
+  addShowWeekNumbersSetting(): void {
     new Setting(this.panelEl)
-      .setName("Detect daily notes in all folders")
+      .setName("Show week numbers")
       .setDesc(
-        "Scan the whole vault, or the folders chosen below, instead of only the Daily Notes folder. Date matching applies either way."
+        "Add a week-number column to the calendar. Clicking a week number opens or creates that week's note."
       )
       .addToggle((toggle) => {
-        toggle.setValue(this.plugin.options.shouldIndexDailyNotesInAllFolders);
+        toggle.setValue(this.plugin.options.showWeekNumbers);
         toggle.onChange(async (value) => {
+          await this.plugin.writeOptions(() => ({ showWeekNumbers: value }));
+          this.display(); // show/hide the weekly-note settings
+        });
+      });
+  }
+
+  addWeeklyNoteFormatSetting(): void {
+    new Setting(this.panelEl)
+      .setName("Weekly note format")
+      .setDesc("For more syntax help, refer to format reference")
+      .addText((textfield) => {
+        textfield.setValue(this.plugin.options.weeklyNoteFormat);
+        textfield.setPlaceholder(DEFAULT_WEEK_FORMAT);
+        textfield.onChange(async (value) => {
+          await this.plugin.writeOptions(() => ({ weeklyNoteFormat: value }));
+        });
+      });
+  }
+
+  addWeeklyNoteTemplateSetting(): void {
+    new Setting(this.panelEl)
+      .setName("Weekly note template")
+      .setDesc(
+        "Choose the file you want to use as the template for your weekly notes"
+      )
+      .addText((textfield) => {
+        textfield.setValue(this.plugin.options.weeklyNoteTemplate);
+        textfield.onChange(async (value) => {
+          await this.plugin.writeOptions(() => ({ weeklyNoteTemplate: value }));
+        });
+      });
+  }
+
+  addWeeklyNoteFolderSetting(): void {
+    new Setting(this.panelEl)
+      .setName("Weekly note folder")
+      .setDesc("New weekly notes will be placed here")
+      .addText((textfield) => {
+        textfield.setValue(this.plugin.options.weeklyNoteFolder);
+        textfield.onChange(async (value) => {
+          await this.plugin.writeOptions(() => ({ weeklyNoteFolder: value }));
+        });
+      });
+  }
+
+  addIncludedFoldersSetting(): void {
+    let foldersField: TextAreaComponent | null = null;
+
+    new Setting(this.panelEl)
+      .setName("Folders to scan")
+      .setDesc(
+        "Where Calendar Hub looks for notes. Untick \"Whole vault\" and tick the folders you want, or untick folders to leave them out. The same scope applies to daily and weekly notes. The text form is comma-separated folder paths; prefix a path with '-' to exclude its subtree, e.g. '30 Macro, -30 Macro/Archive'; deeper rules win."
+      )
+      .addTextArea((textarea) => {
+        foldersField = textarea;
+        textarea.setPlaceholder("Journal, Work/Daily, Projects/Research");
+        textarea.setValue(this.plugin.options.includedFolders);
+        textarea.onChange(async (value) => {
+          await this.plugin.writeOptions(() => ({ includedFolders: value }));
+          this.folderTreeComponent?.$set({
+            rules: parseFolderRules(value),
+          });
+        });
+      });
+
+    const treeEl = this.panelEl.createDiv("calendar-settings-folder-tree");
+    this.folderTreeComponent = new FolderRuleTree({
+      target: treeEl,
+      props: {
+        rules: parseFolderRules(this.plugin.options.includedFolders),
+        onToggleFolder: (folder: string) => {
+          const next = toggleFolderRule(
+            folder,
+            parseFolderRules(this.plugin.options.includedFolders)
+          );
+          const value = serializeFolderRules(next);
+          void this.plugin.writeOptions(() => ({ includedFolders: value }));
+          this.folderTreeComponent?.$set({ rules: next });
+          foldersField?.setValue(value);
+        },
+      },
+    });
+  }
+
+  addDailyNoteFrontmatterDateFieldsSetting(): void {
+    new Setting(this.panelEl)
+      .setName("Frontmatter date fields")
+      .setDesc(
+        "Comma-separated frontmatter fields to read a note's date from, tried in this order; the first valid date wins and beats any date in the file name. Leave blank to match on file names only. Nested fields can use dot notation, such as calendar.date."
+      )
+      .addText((textfield) => {
+        textfield.setPlaceholder("date, daily_date, calendar_date");
+        textfield.setValue(this.plugin.options.dailyNoteFrontmatterDateFields);
+        textfield.onChange(async (value) => {
           await this.plugin.writeOptions(() => ({
-            shouldIndexDailyNotesInAllFolders: value,
+            dailyNoteFrontmatterDateFields: value,
           }));
-          this.display(); // show/hide the folder rules
         });
       });
   }
@@ -394,41 +570,6 @@ export class CalendarSettingsTab extends PluginSettingTab {
       });
   }
 
-  addIndexDailyNotesFromFrontmatterSetting(): void {
-    new Setting(this.panelEl)
-      .setName("Use frontmatter dates")
-      .setDesc(
-        "Read the configured frontmatter fields for a date and prefer it over any date in the file name. Notes without a frontmatter date fall back to file name matching."
-      )
-      .addToggle((toggle) => {
-        toggle.setValue(
-          this.plugin.options.shouldIndexDailyNotesFromFrontmatter
-        );
-        toggle.onChange(async (value) => {
-          await this.plugin.writeOptions(() => ({
-            shouldIndexDailyNotesFromFrontmatter: value,
-          }));
-        });
-      });
-  }
-
-  addDailyNoteFrontmatterDateFieldsSetting(): void {
-    new Setting(this.panelEl)
-      .setName("Frontmatter date fields")
-      .setDesc(
-        "Comma-separated field names to read when frontmatter dates are enabled. Fields are tried in this order and the first one with a valid date wins, so put the field you trust most first. Nested fields can use dot notation, such as calendar.date."
-      )
-      .addText((textfield) => {
-        textfield.setPlaceholder("date, daily_date, calendar_date");
-        textfield.setValue(this.plugin.options.dailyNoteFrontmatterDateFields);
-        textfield.onChange(async (value) => {
-          await this.plugin.writeOptions(() => ({
-            dailyNoteFrontmatterDateFields: value,
-          }));
-        });
-      });
-  }
-
   addIndexDailyNotesFromCreationDateSetting(): void {
     new Setting(this.panelEl)
       .setName("Use file creation date fallback")
@@ -447,176 +588,11 @@ export class CalendarSettingsTab extends PluginSettingTab {
       });
   }
 
-  addDailyNoteIncludedFoldersSetting(): void {
-    let foldersField: TextAreaComponent | null = null;
-
-    new Setting(this.panelEl)
-      .setName("Folders to scan for daily notes")
-      .setDesc(
-        "Optional. Leave blank to scan the whole vault. Tick folders in the tree below or add comma-separated folder paths to limit filename and frontmatter matching. Prefix a path with '-' to exclude its subtree, e.g. '30 Macro, -30 Macro/Archive'; deeper rules win."
-      )
-      .addTextArea((textarea) => {
-        foldersField = textarea;
-        textarea.setPlaceholder(
-          "Journal, Work/Daily, Projects/Research"
-        );
-        textarea.setValue(this.plugin.options.dailyNoteIncludedFolders);
-        textarea.onChange(async (value) => {
-          await this.plugin.writeOptions(() => ({
-            dailyNoteIncludedFolders: value,
-          }));
-          this.folderTreeComponent?.$set({
-            rules: parseFolderRules(value),
-          });
-        });
-      });
-
-    const treeEl = this.panelEl.createDiv("calendar-settings-folder-tree");
-    this.folderTreeComponent = new FolderRuleTree({
-      target: treeEl,
-      props: {
-        rules: parseFolderRules(this.plugin.options.dailyNoteIncludedFolders),
-        onToggleFolder: (folder: string) => {
-          const next = toggleFolderRule(
-            folder,
-            parseFolderRules(this.plugin.options.dailyNoteIncludedFolders)
-          );
-          const value = serializeFolderRules(next);
-          void this.plugin.writeOptions(() => ({
-            dailyNoteIncludedFolders: value,
-          }));
-          this.folderTreeComponent?.$set({ rules: next });
-          foldersField?.setValue(value);
-        },
-      },
-    });
-  }
-
-  addShowWeeklyNoteSetting(): void {
-    new Setting(this.panelEl)
-      .setName("Show week number")
-      .setDesc("Enable this to add a column with the week number")
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.options.showWeeklyNote);
-        toggle.onChange(async (value) => {
-          await this.plugin.writeOptions(() => ({ showWeeklyNote: value }));
-          this.display(); // show/hide weekly settings
-        });
-      });
-  }
-
-  addWeeklyNoteFormatSetting(): void {
-    new Setting(this.panelEl)
-      .setName("Weekly note format")
-      .setDesc("For more syntax help, refer to format reference")
-      .addText((textfield) => {
-        textfield.setValue(this.plugin.options.weeklyNoteFormat);
-        textfield.setPlaceholder(DEFAULT_WEEK_FORMAT);
-        textfield.onChange(async (value) => {
-          await this.plugin.writeOptions(() => ({ weeklyNoteFormat: value }));
-        });
-      });
-  }
-
-  addWeeklyNoteTemplateSetting(): void {
-    new Setting(this.panelEl)
-      .setName("Weekly note template")
-      .setDesc(
-        "Choose the file you want to use as the template for your weekly notes"
-      )
-      .addText((textfield) => {
-        textfield.setValue(this.plugin.options.weeklyNoteTemplate);
-        textfield.onChange(async (value) => {
-          await this.plugin.writeOptions(() => ({ weeklyNoteTemplate: value }));
-        });
-      });
-  }
-
-  addWeeklyNoteFolderSetting(): void {
-    new Setting(this.panelEl)
-      .setName("Weekly note folder")
-      .setDesc("New weekly notes will be placed here")
-      .addText((textfield) => {
-        textfield.setValue(this.plugin.options.weeklyNoteFolder);
-        textfield.onChange(async (value) => {
-          await this.plugin.writeOptions(() => ({ weeklyNoteFolder: value }));
-        });
-      });
-  }
-
-  addIndexWeeklyNotesInAllFoldersSetting(): void {
-    new Setting(this.panelEl)
-      .setName("Detect weekly notes in all folders")
-      .setDesc(
-        "Find every Markdown file that resolves to a week, even outside the weekly notes folder. Matching notes for the selected week appear below the calendar."
-      )
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.options.shouldIndexWeeklyNotesInAllFolders);
-        toggle.onChange(async (value) => {
-          await this.plugin.writeOptions(() => ({
-            shouldIndexWeeklyNotesInAllFolders: value,
-          }));
-        });
-      });
-  }
-
-  addWeeklyNoteIncludedFoldersSetting(): void {
-    new Setting(this.panelEl)
-      .setName("Folders to scan for weekly notes")
-      .setDesc(
-        "Optional. Leave blank to scan the whole vault. Add comma-separated folder paths to limit weekly filename and frontmatter matching. Prefix a path with '-' to exclude its subtree; deeper rules win."
-      )
-      .addTextArea((textarea) => {
-        textarea.setPlaceholder("Journal, Work/Weekly, Reviews");
-        textarea.setValue(this.plugin.options.weeklyNoteIncludedFolders);
-        textarea.onChange(async (value) => {
-          await this.plugin.writeOptions(() => ({
-            weeklyNoteIncludedFolders: value,
-          }));
-        });
-      });
-  }
-
-  addWeeklyNoteFilenameDateFormatSetting(): void {
-    new Setting(this.panelEl)
-      .setName("Week format inside weekly note filenames")
-      .setDesc(
-        "Optional. Calendar Hub already looks for the weekly note format anywhere in the file name. Add extra comma-separated formats here, such as GGGG-[W]WW for files like 'review 2026-W23.md'."
-      )
-      .addText((textfield) => {
-        textfield.setPlaceholder("GGGG-[W]WW");
-        textfield.setValue(this.plugin.options.weeklyNoteFilenameDateFormat);
-        textfield.onChange(async (value) => {
-          await this.plugin.writeOptions(() => ({
-            weeklyNoteFilenameDateFormat: value,
-          }));
-        });
-      });
-  }
-
-  addIndexWeeklyNotesFromFrontmatterSetting(): void {
-    new Setting(this.panelEl)
-      .setName("Use frontmatter dates for weekly notes")
-      .setDesc(
-        "Read the configured frontmatter fields for a week and prefer them over the file name (a week string or a date both work). Notes without a frontmatter value fall back to file name matching."
-      )
-      .addToggle((toggle) => {
-        toggle.setValue(
-          this.plugin.options.shouldIndexWeeklyNotesFromFrontmatter
-        );
-        toggle.onChange(async (value) => {
-          await this.plugin.writeOptions(() => ({
-            shouldIndexWeeklyNotesFromFrontmatter: value,
-          }));
-        });
-      });
-  }
-
   addWeeklyNoteFrontmatterDateFieldsSetting(): void {
     new Setting(this.panelEl)
       .setName("Weekly frontmatter fields")
       .setDesc(
-        "Comma-separated field names to read when weekly frontmatter dates are enabled. Fields are tried in this order and the first one with a valid value wins. Nested fields can use dot notation, such as calendar.week."
+        "Comma-separated frontmatter fields that place a note in a week (a week string or a date both work), tried in this order. Leave blank to match weekly notes on file names only. Nested fields can use dot notation, such as calendar.week."
       )
       .addText((textfield) => {
         textfield.setPlaceholder("week, weekly_date");
@@ -624,30 +600,6 @@ export class CalendarSettingsTab extends PluginSettingTab {
         textfield.onChange(async (value) => {
           await this.plugin.writeOptions(() => ({
             weeklyNoteFrontmatterDateFields: value,
-          }));
-        });
-      });
-  }
-
-  addLocaleOverrideSetting(): void {
-    const { moment } = window;
-
-    const sysLocale = navigator.language?.toLowerCase();
-
-    new Setting(this.panelEl)
-      .setName("Override locale:")
-      .setDesc(
-        "Set this if you want to use a locale different from the default"
-      )
-      .addDropdown((dropdown) => {
-        dropdown.addOption("system-default", `Same as system (${sysLocale})`);
-        moment.locales().forEach((locale) => {
-          dropdown.addOption(locale, locale);
-        });
-        dropdown.setValue(this.plugin.options.localeOverride);
-        dropdown.onChange(async (value) => {
-          await this.plugin.writeOptions(() => ({
-            localeOverride: value,
           }));
         });
       });

@@ -48,16 +48,16 @@ once you are happy.
 ## The calendar
 
 - Click a day to update the note list below the calendar. If one note matches, it opens
-  directly; if several match, choose one from the list. If none match, the daily-note creation
-  flow runs, respecting **Confirm before creating new note**; with **Create note when clicking
-  an empty date** turned off, the day is only selected.
+  directly; if several match, choose one from the list. If none match, **Clicking a date with
+  no notes** decides what happens: ask before creating a note (the default), create one right
+  away, or only select the day.
 - Use **+ New note** at the top of the selected day's list to create and open another note
   immediately, without a confirmation dialog. Notes use your Daily Notes or Periodic Notes
   folder, filename format, and template: for example, `2026-10-28.md`, then
   `2026-10-28 (1).md`, `2026-10-28 (2).md`, and so on. Template `{{date}}` stays a date;
   `{{title}}` includes the numbered suffix.
-- Numbered notes are indexed like any other note. With **Detect daily notes in all folders**
-  enabled (the default), make sure the daily-note folder is within your scan scope.
+- Numbered notes are indexed like any other note, as long as the daily-note folder is within
+  your scan scope.
 - Note-count dots show how many matching notes each day has. Set the cap from 1 to 5 with
   **Maximum dots per day** (default: 5); the note list still shows every match.
 - Weekly-note support remains available through the week-number setting.
@@ -88,12 +88,12 @@ calendar but not in the list, check this list-specific filter.
 
 Two layers, two jobs:
 
-- **Scan scope** (Settings → *Folders to scan for daily notes*) decides what the calendar
-  indexes. It is a rule list: plain entries include a subtree, `-` prefixed entries exclude one,
-  and deeper rules win — so `30 Macro, -30 Macro/Archive` scans 30 Macro except its Archive.
-  A collapsible checkbox tree below the text field writes the rules for you: selecting a folder
-  covers its subtree, unchecking a covered subfolder writes the exclusion, and a dash marks
-  branches that mix included and excluded folders.
+- **Scan scope** (Settings → *Folders*) decides what the calendar indexes, for daily and
+  weekly notes alike. A collapsible checkbox tree starts with **Whole vault**: leave it ticked
+  and untick the folders you want left out, or untick it and tick only the folders you want.
+  A dash marks branches that mix included and excluded folders. The text field holds the same
+  scope as a rule list: plain entries include a subtree, `-` prefixed entries exclude one, and
+  deeper rules win — so `30 Macro, -30 Macro/Archive` scans 30 Macro except its Archive.
 - **The list's Filter folders lens** narrows what the list shows, *within* the scan scope. It
   never changes the calendar.
 
@@ -119,19 +119,26 @@ in different timezones.
 
 ## Settings
 
-Settings are split into four tabs: **General**, **Folders**, **Date matching**, and **Weekly notes**.
+Settings are split into three tabs.
 
-- **Detect daily notes in all folders**: Scan the whole vault, or the folders you choose, instead of only the Daily Notes folder. Date matching applies either way.
-- **Folders to scan for daily notes**: Limit matching to comma-separated folder paths. Leave blank to scan the whole vault. Prefix a path with `-` to exclude its subtree (e.g. `30 Macro, -30 Macro/Archive`); deeper rules win.
-- **Use frontmatter dates**: Read configured frontmatter fields first; the filename is used when no frontmatter date matches.
-- **Frontmatter date fields**: Choose fields such as `date`, `daily_date`, or `calendar.date`. When a note has several date fields, they are tried in the order you list them and the first valid date wins — put the field you trust most first.
+**General**
+
+- **Start week on** and **Override locale**: Calendar layout and language.
+- **Maximum dots per day**: Choose 1–5 note-count dots (default: 5). The cap also applies to weekly note-count dots and never limits the notes shown in the list.
+- **Clicking a date with no notes**: Ask before creating a note (default), create one immediately, or only select the date. The **+ New note** button and the **Open weekly note** command always create immediately.
+- **Show view switcher in sidebar pane**: Show the in-pane calendar/list switch when Calendar Hub is docked in a sidebar. Turn it off for a cleaner pane; **Open calendar view** still flips the pane back to the calendar, and **Open list view** opens the list in its own tab.
+- **Show week numbers**: Add a week-number column; clicking a week number opens or creates that week's note. When Periodic Notes is not managing weekly notes, the **Weekly note format**, **template** and **folder** used for new weekly notes appear here too.
+
+**Folders**
+
+- **Folders to scan**: The checkbox tree described under [Folder filtering](#folder-filtering), shared by daily and weekly notes. The text field holds the same scope as comma-separated folder paths; prefix a path with `-` to exclude its subtree (e.g. `30 Macro, -30 Macro/Archive`); deeper rules win.
+
+**Date matching**
+
+- **Frontmatter date fields**: Fields such as `date`, `daily_date`, or `calendar.date`, tried in the order you list them; the first valid date wins and beats the filename. Leave blank to match on filenames only.
 - **Date format inside daily note filenames**: Pick common formats from the dropdown, or add comma-separated formats by hand, such as `YYYYMMDD` or `YYYYMMDDTHHmmssZZ`.
 - **Use file creation date fallback**: Map notes without any declared date to the day the file was created on disk.
-- **Maximum dots per day**: Choose 1–5 note-count dots (default: 5). The cap also applies to weekly note-count dots and never limits the notes shown in the list.
-- **Create note when clicking an empty date**: Start creating a note when you click a date or week number with no notes (default: on). Turn it off to only select it; the **+ New note** button and the **Open weekly note** command still create notes.
-- **Confirm before creating new note**: Ask before creating a note by clicking an empty date or week number. The explicit **+ New note** button always creates immediately.
-- **Show view switcher in sidebar pane**: Show the in-pane calendar/list switch when Calendar Hub is docked in a sidebar. Turn it off for a cleaner pane; **Open calendar view** still flips the pane back to the calendar, and **Open list view** opens the list in its own tab.
-- **Show week number**: Show week numbers and keep legacy weekly-note behavior.
+- **Weekly frontmatter fields** (with week numbers on): Fields that place a note in a week, such as `week`; a week string or a date both work. Leave blank to match weekly notes on filenames only.
 
 ## Installation
 

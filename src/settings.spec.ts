@@ -1,7 +1,12 @@
+import moment from "moment";
 import type { App } from "obsidian";
 
 import type CalendarPlugin from "./main";
-import { CalendarSettingsTab, defaultSettings } from "./settings";
+import {
+  CalendarSettingsTab,
+  defaultSettings,
+  migrateSettings,
+} from "./settings";
 
 class FakeElement {
   children: FakeElement[] = [];
@@ -46,9 +51,36 @@ class FakeElement {
   }
 }
 
+const dropdownOptions: Record<string, string> = {};
+
 jest.mock("obsidian", () => ({
   PluginSettingTab: class PluginSettingTab {},
-  Setting: class Setting {},
+  Setting: class Setting {
+    constructor(containerEl: FakeElement) {
+      containerEl.createDiv();
+    }
+    setName(): this {
+      return this;
+    }
+    setDesc(): this {
+      return this;
+    }
+    setHeading(): this {
+      return this;
+    }
+    addDropdown(cb: (dropdown: unknown) => void): this {
+      const dropdown = {
+        addOption: (value: string, label: string) => {
+          dropdownOptions[value] = label;
+          return dropdown;
+        },
+        setValue: () => dropdown,
+        onChange: () => dropdown,
+      };
+      cb(dropdown);
+      return this;
+    }
+  },
 }));
 
 jest.mock(
@@ -72,10 +104,7 @@ const allAdders = Object.getOwnPropertyNames(prototype).filter((name) =>
   /^add.*Setting$/.test(name)
 );
 
-function renderTab(
-  showWeeklyNote: boolean,
-  shouldIndexDailyNotesInAllFolders = true
-) {
+function renderTab(showWeekNumbers: boolean) {
   const calls: string[] = [];
   allAdders.forEach((name) => {
     jest.spyOn(prototype, name).mockImplementation(() => {
@@ -87,11 +116,7 @@ function renderTab(
   const tab = new CalendarSettingsTab(
     ({} as unknown) as App,
     ({
-      options: {
-        ...defaultSettings,
-        showWeeklyNote,
-        shouldIndexDailyNotesInAllFolders,
-      },
+      options: { ...defaultSettings, showWeekNumbers },
     } as unknown) as CalendarPlugin
   );
   ((tab as unknown) as { containerEl: FakeElement }).containerEl = containerEl;
@@ -125,9 +150,9 @@ describe("CalendarSettingsTab sections", () => {
       "addWeekStartSetting",
       "addLocaleOverrideSetting",
       "addMaxNoteDotsSetting",
-      "addCreateOnClickSetting",
-      "addConfirmCreateSetting",
+      "addEmptyDateClickSetting",
       "addShowViewSwitcherSetting",
+      "addShowWeekNumbersSetting",
     ]);
   });
 
@@ -137,10 +162,7 @@ describe("CalendarSettingsTab sections", () => {
     tab.display();
     clickTab("Folders");
 
-    expect(calls).toEqual([
-      "addIndexDailyNotesInAllFoldersSetting",
-      "addDailyNoteIncludedFoldersSetting",
-    ]);
+    expect(calls).toEqual(["addIncludedFoldersSetting"]);
     const [general, folders] = containerEl.children[0].children;
     expect(general.classes.has("is-active")).toBe(false);
     expect(general.attrs["aria-selected"]).toBe("false");
@@ -152,23 +174,18 @@ describe("CalendarSettingsTab sections", () => {
     const { calls, clickTab, tab } = renderTab(false);
 
     tab.display();
-    clickTab("Weekly notes");
+    clickTab("Date matching");
     calls.length = 0;
     tab.display();
 
-    expect(calls).toEqual(["addShowWeeklyNoteSetting"]);
+    expect(calls).toEqual([
+      "addDailyNoteFrontmatterDateFieldsSetting",
+      "addDailyNoteFilenameDateFormatSetting",
+      "addIndexDailyNotesFromCreationDateSetting",
+    ]);
   });
 
-  it("hides the folder rules while the scan is pinned to the Daily Notes folder", () => {
-    const { calls, clickTab, tab } = renderTab(false, false);
-
-    tab.display();
-    clickTab("Folders");
-
-    expect(calls).toEqual(["addIndexDailyNotesInAllFoldersSetting"]);
-  });
-
-  it("shows every setting on exactly one tab", () => {
+  it("shows every setting on exactly one tab once week numbers are on", () => {
     const { calls, clickTab, tab } = renderTab(true);
     const seen: string[] = [];
 
@@ -178,9 +195,115 @@ describe("CalendarSettingsTab sections", () => {
     seen.push(...calls);
     clickTab("Date matching");
     seen.push(...calls);
-    clickTab("Weekly notes");
-    seen.push(...calls);
 
     expect([...seen].sort()).toEqual([...allAdders].sort());
+  });
+});
+
+describe("week start setting", () => {
+  it("renders before any calendar has set the locale week-spec global", () => {
+    window.moment = moment as unknown as typeof window.moment;
+    delete (window as unknown as { _bundledLocaleWeekSpec?: unknown })
+      ._bundledLocaleWeekSpec;
+    const tab = new CalendarSettingsTab(
+      ({} as unknown) as App,
+      ({ options: { ...defaultSettings } } as unknown) as CalendarPlugin
+    );
+    const panelEl = new FakeElement();
+    ((tab as unknown) as { panelEl: FakeElement }).panelEl = panelEl;
+
+    tab.addWeekStartSetting();
+
+    expect(panelEl.children).toHaveLength(1);
+    expect(dropdownOptions.locale).toBe("Locale default (Sunday)");
+  });
+});
+
+describe("migrateSettings", () => {
+  it("starts from the defaults when nothing was saved", () => {
+    expect(migrateSettings(null, "Daily")).toEqual(defaultSettings);
+  });
+
+  it("keeps current keys and drops unknown ones", () => {
+    const migrated = migrateSettings(
+      { maxNoteDots: 2, wordsPerDot: 250, includedFolders: "Journal" },
+      ""
+    );
+
+    expect(migrated.maxNoteDots).toBe(2);
+    expect(migrated.includedFolders).toBe("Journal");
+    expect("wordsPerDot" in migrated).toBe(false);
+  });
+
+  it("folds the two click booleans into one choice", () => {
+    expect(
+      migrateSettings({ shouldCreateNoteOnClick: false }, "").emptyDateClick
+    ).toBe("select");
+    expect(
+      migrateSettings({ shouldConfirmBeforeCreate: false }, "").emptyDateClick
+    ).toBe("create");
+    expect(
+      migrateSettings({ shouldConfirmBeforeCreate: true }, "").emptyDateClick
+    ).toBe("confirm");
+    expect(
+      migrateSettings(
+        { emptyDateClick: "create", shouldCreateNoteOnClick: false },
+        ""
+      ).emptyDateClick
+    ).toBe("create");
+  });
+
+  it("turns 'detect in all folders' off into a folder rule", () => {
+    expect(
+      migrateSettings(
+        { shouldIndexDailyNotesInAllFolders: false },
+        "/Journal/Daily/"
+      ).includedFolders
+    ).toBe("Journal/Daily");
+    // An unset Daily Notes folder is the vault root, which blank already means.
+    expect(
+      migrateSettings({ shouldIndexDailyNotesInAllFolders: false }, "")
+        .includedFolders
+    ).toBe("");
+    expect(
+      migrateSettings(
+        {
+          shouldIndexDailyNotesInAllFolders: true,
+          dailyNoteIncludedFolders: "30 Macro",
+        },
+        "Daily"
+      ).includedFolders
+    ).toBe("30 Macro");
+  });
+
+  it("maps the frontmatter toggles onto the field lists", () => {
+    expect(
+      migrateSettings(
+        {
+          shouldIndexDailyNotesFromFrontmatter: false,
+          dailyNoteFrontmatterDateFields: "date",
+        },
+        ""
+      ).dailyNoteFrontmatterDateFields
+    ).toBe("");
+    expect(
+      migrateSettings({ shouldIndexDailyNotesFromFrontmatter: true }, "")
+        .dailyNoteFrontmatterDateFields
+    ).toBe("date, daily_date, calendar_date");
+    expect(
+      migrateSettings(
+        {
+          shouldIndexWeeklyNotesFromFrontmatter: true,
+          weeklyNoteFrontmatterDateFields: "wk",
+        },
+        ""
+      ).weeklyNoteFrontmatterDateFields
+    ).toBe("wk");
+  });
+
+  it("renames the week-number switch", () => {
+    expect(migrateSettings({ showWeeklyNote: true }, "").showWeekNumbers).toBe(
+      true
+    );
   });
 });

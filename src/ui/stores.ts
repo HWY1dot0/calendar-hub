@@ -1,20 +1,13 @@
 import type { TFile } from "obsidian";
 import { get, writable } from "svelte/store";
 
-import { getDailyNoteSettings } from "obsidian-daily-notes-interface";
-
 import { defaultSettings, ISettings } from "src/settings";
 import {
   buildDailyNotesByDate,
   DailyNotesByDate,
   dailyNotesByDateToSingleNotes,
-  getDailyNoteScanScope,
-  singleDailyNotesToDailyNotesByDate,
 } from "src/io/dailyNoteIndex";
-import {
-  buildWeeklyNotesByDate,
-  getAllWeeklyNotes,
-} from "src/io/weeklyNotes";
+import { buildWeeklyNotesByDate } from "src/io/weeklyNotes";
 
 import { getDateUIDFromFile } from "./utils";
 
@@ -34,16 +27,10 @@ function createDailyNotesStore() {
           {
             filenameDateFormat: currentSettings.dailyNoteFilenameDateFormat,
             frontmatterDateFields:
-              currentSettings.shouldIndexDailyNotesFromFrontmatter
-                ? currentSettings.dailyNoteFrontmatterDateFields
-                : "",
+              currentSettings.dailyNoteFrontmatterDateFields,
             useCreationDateFallback:
               currentSettings.shouldIndexDailyNotesFromCreationDate,
-            includedFolders: getDailyNoteScanScope(
-              currentSettings.shouldIndexDailyNotesInAllFolders,
-              currentSettings.dailyNoteIncludedFolders,
-              getDailyNoteSettings().folder ?? ""
-            ),
+            includedFolders: currentSettings.includedFolders,
           }
         );
         const dailyNotes = dailyNotesByDateToSingleNotes(notesByDate);
@@ -72,16 +59,15 @@ function createWeeklyNotesStore() {
     reindex: () => {
       try {
         const currentSettings = get(settings);
-        const notesByDate = currentSettings.shouldIndexWeeklyNotesInAllFolders
-          ? buildWeeklyNotesByDate(window.app.vault.getMarkdownFiles(), {
-              filenameDateFormat: currentSettings.weeklyNoteFilenameDateFormat,
-              frontmatterDateFields: currentSettings
-                .shouldIndexWeeklyNotesFromFrontmatter
-                ? currentSettings.weeklyNoteFrontmatterDateFields
-                : "",
-              includedFolders: currentSettings.weeklyNoteIncludedFolders,
-            })
-          : singleDailyNotesToDailyNotesByDate(getAllWeeklyNotes());
+        // Same scan scope as the daily index; only the date source differs.
+        const notesByDate = buildWeeklyNotesByDate(
+          window.app.vault.getMarkdownFiles(),
+          {
+            frontmatterDateFields:
+              currentSettings.weeklyNoteFrontmatterDateFields,
+            includedFolders: currentSettings.includedFolders,
+          }
+        );
         const weeklyNotes = dailyNotesByDateToSingleNotes(notesByDate);
 
         store.set(weeklyNotes);
@@ -90,10 +76,7 @@ function createWeeklyNotesStore() {
       } catch (err) {
         if (!hasError) {
           // Avoid error being shown multiple times
-          console.warn(
-            "[Calendar Hub] Failed to find weekly notes folder",
-            err
-          );
+          console.warn("[Calendar Hub] Failed to index weekly notes", err);
         }
         store.set({});
         weeklyNotesByDate.set({});

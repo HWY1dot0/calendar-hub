@@ -89,26 +89,6 @@ export function buildNotesByDate(
   return notesByDate;
 }
 
-/**
- * Folder rules the daily index scans. "Detect daily notes in all folders"
- * only decides the scope: on, the user's own folder rules apply (blank means
- * the whole vault); off, the scan is pinned to the Daily Notes folder. Date
- * matching reads the same settings either way.
- */
-export function getDailyNoteScanScope(
-  indexAllFolders: boolean,
-  includedFolders: string,
-  dailyNoteFolder: string
-): string {
-  if (indexAllFolders) {
-    return includedFolders;
-  }
-  const folder = dailyNoteFolder.trim().replace(/^\/+|\/+$/g, "");
-  // The rule parser treats a blank list as "everything", which is also what
-  // an unset Daily Notes folder means; "/" pins the root explicitly.
-  return folder || "/";
-}
-
 export function buildDailyNotesByDate(
   files: TFile[],
   options: DailyNoteIndexOptions | string = ""

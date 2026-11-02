@@ -69,11 +69,9 @@ jest.mock("./ui/stores", () => {
   };
 });
 
-function createView(shouldCreateNoteOnClick: boolean): CalendarView {
+function createView(emptyDateClick: "create" | "select"): CalendarView {
   const view = new CalendarView({} as WorkspaceLeaf, {} as CalendarPlugin);
-  (view as unknown as { settings: unknown }).settings = {
-    shouldCreateNoteOnClick,
-  };
+  (view as unknown as { settings: unknown }).settings = { emptyDateClick };
   return view;
 }
 
@@ -85,7 +83,7 @@ describe("clicking a date or week with no notes", () => {
   });
 
   it("creates the notes by default", async () => {
-    const view = createView(true);
+    const view = createView("create");
 
     await view.openOrCreateDailyNote(date, false);
     await (view as unknown as {
@@ -96,8 +94,8 @@ describe("clicking a date or week with no notes", () => {
     expect(tryToCreateWeeklyNote).toHaveBeenCalledTimes(1);
   });
 
-  it("only selects when creating on click is turned off", async () => {
-    const view = createView(false);
+  it("only selects when the click is set to select", async () => {
+    const view = createView("select");
 
     await view.openOrCreateDailyNote(date, false);
     await (view as unknown as {
@@ -109,7 +107,7 @@ describe("clicking a date or week with no notes", () => {
   });
 
   it("still creates a weekly note from the explicit command", async () => {
-    const view = createView(false);
+    const view = createView("select");
 
     await view.openOrCreateWeeklyNote(date, false);
 

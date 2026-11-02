@@ -151,7 +151,7 @@ export async function tryToCreateDailyNote(
     cb?.(dailyNote);
   };
 
-  if (settings.shouldConfirmBeforeCreate) {
+  if (settings.emptyDateClick === "confirm") {
     createConfirmationDialog({
       cta: "Create",
       onAccept: createFile,

@@ -9,12 +9,10 @@ import {
 import {
   buildDailyNotesByDate,
   dailyNotesByDateToSingleNotes,
-  getDailyNoteScanScope,
   getDateFromFilename,
   getDailyNotesForDate,
   singleDailyNotesToDailyNotesByDate,
 } from "./dailyNoteIndex";
-import { parseFolderRules, shouldIncludeFilePath } from "./folderRules";
 
 jest.mock("obsidian-daily-notes-interface", () => ({
   DEFAULT_DAILY_NOTE_FORMAT: "YYYY-MM-DD",
@@ -365,23 +363,6 @@ describe("dailyNoteIndex", () => {
 
     expect(result).toEqual([journalNote, workNote]);
     expect(mockGetDailyNote).not.toHaveBeenCalled();
-  });
-
-  it("scans the user's folder rules when detecting in all folders", () => {
-    expect(getDailyNoteScanScope(true, "30 Macro, -30 Macro/Archive", "Daily")).toBe(
-      "30 Macro, -30 Macro/Archive"
-    );
-    expect(getDailyNoteScanScope(true, "", "Daily")).toBe("");
-  });
-
-  it("pins the scan to the Daily Notes folder otherwise", () => {
-    expect(getDailyNoteScanScope(false, "30 Macro", "/Journal/Daily/")).toBe(
-      "Journal/Daily"
-    );
-    expect(getDailyNoteScanScope(false, "30 Macro", "")).toBe("/");
-    expect(shouldIncludeFilePath("Journal/Daily/2024-12-31.md", parseFolderRules("Journal/Daily"))).toBe(true);
-    expect(shouldIncludeFilePath("30 Macro/2024-12-31.md", parseFolderRules("Journal/Daily"))).toBe(false);
-    expect(shouldIncludeFilePath("30 Macro/2024-12-31.md", parseFolderRules("/"))).toBe(true);
   });
 
   it("falls back to the original daily-note lookup", () => {

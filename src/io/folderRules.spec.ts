@@ -15,6 +15,39 @@ describe("folderRules", () => {
     ]);
   });
 
+  it("treats the vault root as a folder of its own", () => {
+    // Blank rules: everything is in scope and the root reads as ticked.
+    expect(getFolderCheckState("", [])).toBe("checked");
+    // Excluding a subfolder leaves the root partially ticked.
+    expect(getFolderCheckState("", parseFolderRules("-Archive"))).toBe(
+      "partial"
+    );
+    // Include-only rules: the root is partially ticked, not unticked.
+    expect(getFolderCheckState("", parseFolderRules("30 Macro"))).toBe(
+      "partial"
+    );
+
+    // Clicking a partially ticked root normalizes it to the whole vault, like
+    // any other partial folder; clicking a ticked root unticks everything.
+    expect(toggleFolderRule("", parseFolderRules("30 Macro, -Archive"))).toEqual(
+      []
+    );
+    const none = toggleFolderRule("", []);
+    expect(none).toEqual([{ path: "", excluded: true }]);
+    expect(serializeFolderRules(none)).toBe("-/");
+    expect(shouldIncludeFilePath("30 Macro/note.md", none)).toBe(false);
+    expect(getFolderCheckState("", none)).toBe("none");
+
+    // Ticking folders under an unticked root scopes the scan to them.
+    const some = toggleFolderRule("30 Macro", none);
+    expect(shouldIncludeFilePath("30 Macro/note.md", some)).toBe(true);
+    expect(shouldIncludeFilePath("Archive/note.md", some)).toBe(false);
+    expect(getFolderCheckState("", some)).toBe("partial");
+
+    // Ticking the root again clears everything back to the whole vault.
+    expect(toggleFolderRule("", some)).toEqual([]);
+  });
+
   it("round-trips through serialization", () => {
     const rules = parseFolderRules("30 Macro, -30 Macro/Archive, 40 Logs");
 

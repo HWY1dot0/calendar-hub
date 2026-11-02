@@ -360,6 +360,10 @@
   margin: 0 0 18px;
 }
 
+.calendar-folder-root .calendar-folder-path {
+  font-weight: var(--font-semibold);
+}
+
 .calendar-settings-folder-tree .calendar-folder-list {
   max-width: 480px;
 }
