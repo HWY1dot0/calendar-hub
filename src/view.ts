@@ -159,7 +159,10 @@ export default class CalendarView extends ItemView {
   /** Obsidian hides a pane's `.view-header` — and with it the `addAction`
    *  icons — inside the sidebars, so the in-content toolbar stands in for it
    *  there. Whenever the header is actually visible, that toolbar would be a
-   *  second copy of the same control, so it stays hidden. */
+   *  second copy of the same control, so it stays hidden. The toolbar can also
+   *  be turned off in the settings: a user who hides it has settled on one
+   *  view, so it stays hidden in both modes. The "Open list view" and "Open
+   *  calendar view" commands remain the way across. */
   private syncNavBarVisibility = (): void => {
     if (!this.navBar) {
       return;
@@ -167,7 +170,10 @@ export default class CalendarView extends ItemView {
     const header = this.containerEl.querySelector(".view-header");
     const headerVisible =
       header !== null && getComputedStyle(header).display !== "none";
-    this.navBar.classList.toggle("calendar-hub-nav-hidden", headerVisible);
+    this.navBar.classList.toggle(
+      "calendar-hub-nav-hidden",
+      headerVisible || this.settings?.shouldShowViewSwitcher === false
+    );
   };
 
   private destroyModeComponents(): void {
