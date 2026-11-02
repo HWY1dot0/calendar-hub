@@ -563,7 +563,6 @@ export default class CalendarView extends ItemView {
     if (
       !this.app.workspace.layoutReady ||
       !(this.calendar || this.listPanel) ||
-      !this.settings?.shouldIndexDailyNotesInAllFolders ||
       !this.isMarkdownFile(file)
     ) {
       return false;

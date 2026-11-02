@@ -56,9 +56,8 @@ once you are happy.
   folder, filename format, and template: for example, `2026-10-28.md`, then
   `2026-10-28 (1).md`, `2026-10-28 (2).md`, and so on. Template `{{date}}` stays a date;
   `{{title}}` includes the numbered suffix.
-- Keep **Detect daily notes in all folders** enabled (the default) to include numbered notes
-  in the index, and make sure the daily-note folder is within your scan scope. With this
-  setting off, only exact daily-note filenames are indexed, so numbered notes will not appear.
+- Numbered notes are indexed like any other note. With **Detect daily notes in all folders**
+  enabled (the default), make sure the daily-note folder is within your scan scope.
 - Note-count dots show how many matching notes each day has. Set the cap from 1 to 5 with
   **Maximum dots per day** (default: 5); the note list still shows every match.
 - Weekly-note support remains available through the week-number setting.
@@ -120,7 +119,9 @@ in different timezones.
 
 ## Settings
 
-- **Detect daily notes in all folders**: Scan Markdown files outside the configured Daily Notes folder.
+Settings are split into four tabs: **General**, **Folders**, **Date matching**, and **Weekly notes**.
+
+- **Detect daily notes in all folders**: Scan the whole vault, or the folders you choose, instead of only the Daily Notes folder. Date matching applies either way.
 - **Folders to scan for daily notes**: Limit matching to comma-separated folder paths. Leave blank to scan the whole vault. Prefix a path with `-` to exclude its subtree (e.g. `30 Macro, -30 Macro/Archive`); deeper rules win.
 - **Use frontmatter dates**: Read configured frontmatter fields first; the filename is used when no frontmatter date matches.
 - **Frontmatter date fields**: Choose fields such as `date`, `daily_date`, or `calendar.date`. When a note has several date fields, they are tried in the order you list them and the first valid date wins — put the field you trust most first.

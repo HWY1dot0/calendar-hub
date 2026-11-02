@@ -324,6 +324,38 @@
   margin-bottom: 6px;
 }
 
+.calendar-settings-tabs {
+  border-bottom: 1px solid var(--background-modifier-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.calendar-settings-tabs .calendar-settings-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  height: auto;
+  margin-bottom: -1px;
+  padding: 6px 12px;
+}
+
+.calendar-settings-tabs .calendar-settings-tab:hover {
+  color: var(--text-normal);
+}
+
+.calendar-settings-tabs .calendar-settings-tab.is-active {
+  border-bottom-color: var(--interactive-accent);
+  color: var(--text-normal);
+  font-weight: var(--font-semibold);
+}
+
 .calendar-settings-folder-tree {
   margin: 0 0 18px;
 }
