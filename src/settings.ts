@@ -264,7 +264,7 @@ export class CalendarSettingsTab extends PluginSettingTab {
     new Setting(this.containerEl)
       .setName("Show view switcher in sidebar pane")
       .setDesc(
-        "Show the calendar/list switch at the top of the pane when it is docked in a sidebar. Turn it off for a cleaner pane; the \"Open list view\" and \"Open calendar view\" commands still work."
+        "Show the calendar/list switch at the top of the pane when it is docked in a sidebar. Turn it off for a cleaner pane; \"Open calendar view\" still flips the pane back to the calendar, and \"Open list view\" opens the list in its own tab."
       )
       .addToggle((toggle) => {
         toggle.setValue(this.plugin.options.shouldShowViewSwitcher);
