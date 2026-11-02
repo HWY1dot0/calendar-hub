@@ -74,6 +74,8 @@ It has two homes:
   the same pane into the list and back. When you move the pane to the main workspace, use
   the view-header button instead; the extra in-pane toolbar is hidden while the header is
   visible. Some themes reveal sidebar buttons only on hover. The mode you choose is remembered.
+  Turn off **Show view switcher in sidebar pane** for a cleaner pane; use the
+  **Open list view** and **Open calendar view** commands to change views.
 - **As its own tab**: run the **Open list view** command and drag the tab anywhere — including
   the main workspace for full-height browsing.
 
@@ -125,6 +127,7 @@ in different timezones.
 - **Use file creation date fallback**: Map notes without any declared date to the day the file was created on disk.
 - **Maximum dots per day**: Choose 1–5 note-count dots (default: 5). The cap also applies to weekly note-count dots and never limits the notes shown in the list.
 - **Confirm before creating new note**: Ask before creating a note by clicking an empty date or week number. The explicit **+ New note** button always creates immediately.
+- **Show view switcher in sidebar pane**: Show the in-pane calendar/list switch when Calendar Hub is docked in a sidebar. Turn it off for a cleaner pane; the **Open list view** and **Open calendar view** commands still work.
 - **Show week number**: Show week numbers and keep legacy weekly-note behavior.
 
 ## Installation
