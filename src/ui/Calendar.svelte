@@ -13,6 +13,7 @@
   import type { ISettings } from "src/settings";
   import { getDailyNotesForDate } from "src/io/dailyNoteIndex";
   import { getWeeklyNotesForDate } from "src/io/weeklyNotes";
+  import { formatWeekLabel } from "src/ui/utils";
   import {
     activeFile,
     dailyNotes,
@@ -47,7 +48,7 @@
     selectionMode === "week" ? !!selectedWeek : !!selectedDate;
   $: panelLabel =
     selectionMode === "week" && selectedWeek
-      ? `${selectedWeek.format("GGGG")} · ${selectedWeek.format("[W]WW")}`
+      ? formatWeekLabel(selectedWeek)
       : selectedDate
       ? selectedDate.format("LL")
       : "";
