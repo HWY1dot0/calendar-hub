@@ -3,12 +3,23 @@ import { getDateUID } from "obsidian-daily-notes-interface";
 
 import { getDayDateFromFile } from "src/io/dailyNotes";
 import { getWeekDateFromFile } from "src/io/weeklyNotes";
+import type { Moment } from "src/obsidian-moment";
 
 export const classList = (obj: Record<string, boolean>): string[] => {
   return Object.entries(obj)
     .filter(([, v]) => !!v)
     .map(([k]) => k);
 };
+
+/**
+ * Label for a selected calendar week. Uses the locale week (gggg / ww), the
+ * same numbering as the calendar's week column and the default weekly note
+ * format, so the label matches the row that was clicked when the week starts
+ * on a day other than Monday.
+ */
+export function formatWeekLabel(weekStart: Moment): string {
+  return `${weekStart.format("gggg")} · ${weekStart.format("[W]ww")}`;
+}
 
 export function clamp(
   num: number,
